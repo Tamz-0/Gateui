@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TAMZ://GATE_CSE_2027 — TERMINAL v4.1</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --green:#00ff41;
+  --green2:#00cc33;
+  --green3:#008f20;
+  --green-dim:rgba(0,255,65,0.08);
+  --green-glow:rgba(0,255,65,0.15);
+  --cyan:#00d4ff;
+  --cyan-dim:rgba(0,212,255,0.08);
+  --amber:#ffb000;
+  --red:#ff3333;
+  --purple:#bf5fff;
+  --bg:#020b02;
+  --bg2:#030f03;
+  --bg3:#041504;
+  --border:rgba(0,255,65,0.15);
+  --border2:rgba(0,255,65,0.25);
+  --muted:rgba(0,255,65,0.45);
+  --faint:rgba(0,255,65,0.2);
+  --mono:'JetBrains Mono',monospace;
+  --tech:'Share Tech Mono',monospace;
+}
+
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--green);
+  font-family:var(--mono);
+  font-size:13px;
+  line-height:1.6;
+  overflow-x:hidden;
+  cursor:default;
+}
+
+/* ── MATRIX RAIN ── */
+#matrix-canvas{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  z-index:0;pointer-events:none;opacity:0.045;
+}
+
+/* ── SCANLINES ── */
+body::before{
+  content:'';
+  position:fixed;inset:0;z-index:1;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.08) 2px,rgba(0,0,0,0.08) 4px);
+  pointer-events:none;
+}
+
+/* ── VIGNETTE ── */
+body::after{
+  content:'';
+  position:fixed;inset:0;z-index:1;
+  background:radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.7) 100%);
+  pointer-events:none;
+}
+
+/* ── WRAPPER ── */
+.terminal-wrap{
+  position:relative;z-index:2;
+  max-width:980px;
+  margin:0 auto;
+  padding:0 20px;
+}
+
+/* ── TOP BAR ── */
+.topbar{
+  border-bottom:1px solid var(--border);
+  padding:10px 20px;
+  display:flex;align-items:center;gap:16px;
+  background:rgba(2,11,2,0.95);
+  backdrop-filter:blur(10px);
+  position:sticky;top:0;z-index:100;
+  font-size:11px;
+  color:var(--muted);
+}
+.tb-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.tb-dot.red{background:#ff5f56}
+.tb-dot.yellow{background:#ffbd2e}
+.tb-dot.green{background:#27c93f}
+.tb-title{color:var(--green);font-weight:700;letter-spacing:.08em;flex:1;text-align:center;text-shadow:0 0 12px var(--green)}
+.tb-right{display:flex;gap:14px;align-items:center}
+.tb-stat{display:flex;gap:5px;align-items:center}
+.tb-blink{animation:blink 1s step-end infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ── BOOT SCREEN ── */
+#boot-screen{
+  position:fixed;inset:0;z-index:500;
+  background:var(--bg);
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  gap:8px;
+  transition:opacity .5s ease;
+}
+#boot-screen.fade-out{opacity:0;pointer-events:none}
+.boot-logo{
+  font-family:var(--tech);
+  font-size:clamp(12px,3vw,22px);
+  color:var(--green);
+  text-shadow:0 0 20px var(--green);
+  white-space:pre;
+  line-height:1.2;
+  letter-spacing:.05em;
+  text-align:center;
+}
+.boot-line{
+  color:var(--muted);
+  font-size:11px;
+  letter-spacing:.06em;
+}
+.boot-bar-wrap{
+  width:280px;height:3px;
+  background:rgba(0,255,65,0.1);
+  border-radius:2px;
+  margin-top:16px;
+  overflow:hidden;
+}
+.boot-bar{
+  height:100%;background:var(--green);
+  border-radius:2px;width:0%;
+  transition:width .05s ease;
+  box-shadow:0 0 8px var(--green);
+}
+.boot-pct{font-size:10px;color:var(--muted);letter-spacing:.1em}
+
+/* ── COUNTDOWN STRIP ── */
+.cd-strip{
+  border-bottom:1px solid var(--border);
+  padding:9px 20px;
+  background:var(--bg2);
+  display:flex;align-items:center;gap:20px;
+  font-size:11px;
+  overflow-x:auto;
+}
+.cd-label{color:var(--muted);letter-spacing:.1em;text-transform:uppercase;flex-shrink:0}
+.cd-unit{display:flex;align-items:baseline;gap:4px;flex-shrink:0}
+.cd-n{font-size:20px;font-weight:700;color:var(--green);text-shadow:0 0 10px var(--green);line-height:1}
+.cd-u{font-size:9px;color:var(--muted);letter-spacing:.1em}
+.cd-sep{color:var(--faint);font-size:14px}
+.cd-phase{margin-left:auto;padding:3px 10px;border:1px solid rgba(0,255,65,0.3);color:var(--green);font-size:9px;letter-spacing:.1em;text-transform:uppercase;flex-shrink:0}
+.cd-progress-wrap{height:2px;background:rgba(0,255,65,0.08);position:relative}
+.cd-progress-fill{height:100%;background:linear-gradient(90deg,var(--green3),var(--green));position:absolute;left:0;top:0;transition:width 1s}
+
+/* ── HERO TERMINAL ── */
+.hero-term{
+  padding:40px 0 10px;
+}
+.term-prompt-line{
+  display:flex;align-items:flex-start;gap:8px;
+  color:var(--muted);
+  font-size:12px;
+  margin-bottom:4px;
+}
+.prompt-user{color:var(--green);font-weight:700}
+.prompt-at{color:var(--muted)}
+.prompt-host{color:var(--cyan)}
+.prompt-path{color:var(--amber)}
+.prompt-sym{color:var(--green)}
+.term-typed{
+  color:var(--green);
+  font-size:clamp(13px,2vw,15px);
+  text-shadow:0 0 8px rgba(0,255,65,0.5);
+}
+.term-output{
+  padding:12px 0 12px 24px;
+  border-left:1px solid var(--faint);
+  margin:6px 0 20px 20px;
+}
+.hero-ascii{
+  font-family:var(--tech);
+  font-size:clamp(9px,1.5vw,13px);
+  color:var(--green);
+  text-shadow:0 0 10px rgba(0,255,65,0.4);
+  white-space:pre;
+  line-height:1.2;
+  margin-bottom:16px;
+}
+.hero-tagline{
+  color:var(--muted);
+  font-size:12px;
+  letter-spacing:.06em;
+  margin-bottom:6px;
+}
+.hero-tagline span{color:var(--green)}
+.sys-info-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:6px;
+  margin-top:12px;
+}
+.sys-row{
+  display:flex;gap:8px;
+  font-size:11px;
+  color:var(--muted);
+}
+.sys-key{color:var(--green2);min-width:100px}
+.sys-val{color:var(--green)}
+
+/* ── SECTION HEADER ── */
+.sec-cmd{
+  margin:32px 0 0;
+  padding:6px 0;
+  border-top:1px solid var(--border);
+}
+.sec-cmd-line{
+  display:flex;align-items:center;gap:8px;
+  font-size:12px;margin-bottom:2px;
+}
+.sec-title-out{
+  padding:10px 0 4px 24px;
+  border-left:1px solid var(--faint);
+  margin-left:20px;
+  margin-bottom:16px;
+}
+.sec-title{
+  font-size:11px;
+  color:var(--muted);
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  margin-bottom:2px;
+}
+.sec-title::before{content:'// '}
+.sec-desc{font-size:11.5px;color:rgba(0,255,65,0.5)}
+
+/* ── TOOL CARDS ── */
+.tool-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));
+  gap:8px;
+  margin-bottom:8px;
+}
+.tool-card{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  padding:16px;
+  text-decoration:none;
+  color:inherit;
+  display:block;
+  position:relative;
+  overflow:hidden;
+  transition:border-color .2s,background .2s,transform .15s;
+  cursor:pointer;
+}
+.tool-card::before{
+  content:'';
+  position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:var(--c, var(--green3));
+  transition:background .2s;
+}
+.tool-card:hover{
+  border-color:var(--c, var(--green));
+  background:var(--cg, var(--green-dim));
+  transform:translateX(3px);
+}
+.tool-card:hover::before{background:var(--c,var(--green))}
+.tc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px}
+.tc-cmd{font-size:10px;color:var(--c,var(--green2));letter-spacing:.06em;font-weight:700}
+.tc-status{font-size:9px;padding:2px 7px;border:1px solid var(--c,var(--border));color:var(--c,var(--muted));letter-spacing:.06em}
+.tc-name{font-size:13px;color:var(--green);font-weight:600;margin-bottom:4px;text-shadow:0 0 8px rgba(0,255,65,0.3)}
+.tc-desc{font-size:11px;color:var(--muted);line-height:1.65;margin-bottom:10px}
+.tc-pills{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.tc-pill{font-size:9px;padding:1px 7px;border:1px solid var(--faint);color:var(--muted);letter-spacing:.04em}
+.tc-footer{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);padding-top:8px;margin-top:4px}
+.tc-tag{font-size:10px;color:var(--faint);letter-spacing:.04em}
+.tc-open{font-size:10px;color:var(--c,var(--green3));letter-spacing:.06em}
+.tool-card:hover .tc-open{color:var(--c,var(--green))}
+
+/* ── PHASE ROWS ── */
+.phase-list{display:flex;flex-direction:column;gap:5px;margin-bottom:8px}
+.phase-row{
+  display:flex;align-items:stretch;
+  border:1px solid var(--border);
+  background:var(--bg2);
+  text-decoration:none;color:inherit;
+  overflow:hidden;
+  transition:border-color .2s,background .2s;
+}
+.phase-row:hover{border-color:var(--ph,var(--green));background:rgba(0,255,65,0.04)}
+.ph-num{
+  width:44px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;font-weight:700;
+  color:var(--ph,var(--green2));
+  background:rgba(0,0,0,0.3);
+  border-right:1px solid var(--border);
+  text-shadow:0 0 10px var(--ph,var(--green3));
+}
+.ph-body{flex:1;padding:11px 16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.ph-info{flex:1;min-width:160px}
+.ph-cmd{font-size:9px;color:var(--ph,var(--green2));letter-spacing:.08em;margin-bottom:2px}
+.ph-name{font-size:12px;color:var(--green);font-weight:500;margin-bottom:2px}
+.ph-range{font-size:10px;color:var(--muted)}
+.ph-tags{display:flex;gap:4px;flex-wrap:wrap}
+.ph-tag{font-size:9px;padding:1px 7px;border:1px solid;border-color:var(--ph,var(--border));color:var(--ph,var(--muted));letter-spacing:.05em}
+.ph-right{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.ph-pct{font-size:10px;color:var(--ph,var(--green2));font-weight:700;letter-spacing:.04em}
+.ph-bar-w{width:80px;height:2px;background:rgba(0,255,65,0.08)}
+.ph-bar{height:100%;background:var(--ph,var(--green));transition:width 1.2s ease;box-shadow:0 0 6px var(--ph,var(--green))}
+.ph-arr{font-size:14px;color:var(--faint);padding:0 12px;align-self:center;transition:color .2s}
+.phase-row:hover .ph-arr{color:var(--ph,var(--green))}
+
+/* ── SUBJECTS ── */
+.subj-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:5px;margin-bottom:8px;
+}
+.subj-item{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 12px;
+  border:1px solid var(--border);
+  background:var(--bg2);
+  text-decoration:none;color:inherit;
+  transition:all .2s;
+}
+.subj-item:hover{
+  border-color:var(--green);
+  background:var(--green-dim);
+  transform:translateX(3px);
+}
+.subj-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;box-shadow:0 0 5px currentColor}
+.subj-name{font-size:11.5px;color:var(--green);flex:1}
+.subj-tag{font-size:9px;color:var(--muted);letter-spacing:.04em}
+
+/* ── DSA GRID ── */
+.dsa-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+  gap:5px;margin-bottom:8px;
+}
+
+/* ── INTERACTIVE TERMINAL ── */
+.live-terminal{
+  background:var(--bg2);
+  border:1px solid var(--border2);
+  margin:30px 0;
+  overflow:hidden;
+}
+.lt-titlebar{
+  background:rgba(0,0,0,0.5);
+  padding:7px 14px;
+  display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid var(--border);
+}
+.lt-dots{display:flex;gap:6px}
+.lt-dot{width:9px;height:9px;border-radius:50%}
+.lt-name{flex:1;text-align:center;font-size:10px;color:var(--muted);letter-spacing:.08em}
+.lt-hint{font-size:9px;color:var(--faint)}
+.lt-output{
+  padding:16px;
+  min-height:240px;
+  max-height:400px;
+  overflow-y:auto;
+  font-size:12px;
+  line-height:1.7;
+}
+.lt-output::-webkit-scrollbar{width:3px}
+.lt-output::-webkit-scrollbar-thumb{background:var(--border2)}
+.lt-input-row{
+  display:flex;align-items:center;gap:6px;
+  padding:10px 16px;
+  border-top:1px solid var(--border);
+  background:rgba(0,0,0,0.3);
+}
+.lt-prompt-pre{
+  color:var(--muted);font-size:11px;flex-shrink:0;white-space:nowrap;
+}
+.lt-input{
+  flex:1;
+  background:none;border:none;outline:none;
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--green);
+  caret-color:var(--green);
+}
+.lt-input::placeholder{color:var(--faint)}
+.lo-line{margin-bottom:2px}
+.lo-cmd{color:var(--green);font-weight:600}
+.lo-ok{color:var(--green2)}
+.lo-info{color:var(--cyan)}
+.lo-warn{color:var(--amber)}
+.lo-err{color:var(--red)}
+.lo-comment{color:var(--faint)}
+.lo-link{color:var(--cyan);text-decoration:none}
+.lo-link:hover{text-decoration:underline}
+.lo-indent{padding-left:20px}
+.lo-table{
+  border-collapse:collapse;
+  font-size:11px;
+  margin:4px 0;
+  width:100%;
+}
+.lo-table th{color:var(--green);text-align:left;padding:2px 12px 2px 0;border-bottom:1px solid var(--border);font-weight:600}
+.lo-table td{color:var(--muted);padding:2px 12px 2px 0}
+.lo-table td.hi{color:var(--green)}
+.lo-table td.cy{color:var(--cyan)}
+.lo-table td.am{color:var(--amber)}
+.lo-prog-bar{
+  display:flex;align-items:center;gap:8px;
+  font-size:11px;color:var(--muted);
+}
+.lo-bar-w{width:100px;height:3px;background:rgba(0,255,65,0.1)}
+.lo-bar-f{height:100%;background:var(--green);box-shadow:0 0 4px var(--green)}
+.lo-phase-block{
+  border:1px solid var(--border);
+  padding:8px 12px;
+  margin:4px 0;
+  background:rgba(0,255,65,0.03);
+}
+.lo-phase-block.active{border-color:var(--green2)}
+
+/* Typing animation */
+@keyframes typing{from{width:0}to{width:100%}}
+.typed-anim{
+  overflow:hidden;white-space:nowrap;
+  animation:typing 1s steps(40,end) forwards;
+}
+
+/* ── FOOTER ── */
+.term-footer{
+  margin:40px 0 0;
+  padding:20px 0;
+  border-top:1px solid var(--border);
+}
+.tf-inner{
+  display:flex;flex-wrap:wrap;gap:24px;
+  font-size:11px;
+}
+.tf-col-h{color:var(--green);letter-spacing:.1em;font-weight:700;margin-bottom:6px}
+.tf-link{color:var(--muted);text-decoration:none;display:block;margin-bottom:3px;transition:color .2s}
+.tf-link:hover{color:var(--green)}
+.tf-note{margin-top:14px;padding-top:14px;border-top:1px solid var(--border);font-size:10px;color:var(--faint);letter-spacing:.06em;text-align:center}
+
+/* ── GLITCH ── */
+@keyframes glitch{
+  0%{clip-path:inset(80% 0 0 0);transform:translate(-2px,0)}
+  20%{clip-path:inset(10% 0 80% 0);transform:translate(2px,0)}
+  40%{clip-path:inset(40% 0 50% 0);transform:translate(-1px,0)}
+  60%{clip-path:inset(25% 0 55% 0);transform:translate(1px,0)}
+  80%{clip-path:inset(70% 0 5% 0);transform:translate(-2px,0)}
+  100%{clip-path:inset(10% 0 70% 0);transform:translate(0)}
+}
+.glitch{position:relative}
+.glitch::before,.glitch::after{
+  content:attr(data-text);
+  position:absolute;left:0;top:0;
+  color:var(--green);
+}
+.glitch::before{color:var(--cyan);animation:glitch .6s infinite linear alternate-reverse;opacity:.4}
+.glitch::after{color:var(--red);animation:glitch .7s infinite linear alternate;opacity:.3}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:640px){
+  .tool-grid{grid-template-columns:1fr}
+  .sys-info-grid{grid-template-columns:1fr}
+  .subj-grid{grid-template-columns:1fr 1fr}
+  .lt-prompt-pre{font-size:10px}
+  .hero-ascii{font-size:8px}
+  .tb-right{display:none}
+}
+
+/* help section */
+.help-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:4px;margin:4px 0}
+.help-row{display:flex;gap:8px;font-size:11px;padding:4px 0}
+.hk{color:var(--green);min-width:130px;font-weight:600}
+.hd{color:var(--muted)}
+
+/* pulse dot */
+.pulse{
+  display:inline-block;width:6px;height:6px;border-radius:50%;
+  background:var(--green);box-shadow:0 0 0 0 var(--green);
+  animation:pulse-ring 2s ease infinite;
+}
+@keyframes pulse-ring{
+  0%{box-shadow:0 0 0 0 rgba(0,255,65,.5)}
+  70%{box-shadow:0 0 0 8px rgba(0,255,65,0)}
+  100%{box-shadow:0 0 0 0 rgba(0,255,65,0)}
+}
+</style>
+</head>
+<body>
+
+<!-- Matrix canvas -->
+<canvas id="matrix-canvas"></canvas>
+
+<!-- BOOT SCREEN -->
+<div id="boot-screen">
+  <div class="boot-logo" id="bootLogo"></div>
+  <div class="boot-line" id="bootLine">Initializing TAMZ kernel...</div>
+  <div class="boot-bar-wrap"><div class="boot-bar" id="bootBar"></div></div>
+  <div class="boot-pct" id="bootPct">0%</div>
+</div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="tb-dot red"></div>
+  <div class="tb-dot yellow"></div>
+  <div class="tb-dot green"></div>
+  <div class="tb-title">TAMZ://root@GATE_CSE_2027 — bash v5.2.21</div>
+  <div class="tb-right">
+    <div class="tb-stat"><span class="pulse"></span>&nbsp;LIVE</div>
+    <div class="tb-stat" id="tbTime">00:00:00</div>
+    <div class="tb-stat" style="color:var(--green)">W5/W35</div>
+  </div>
+</div>
+
+<!-- COUNTDOWN STRIP -->
+<div class="cd-strip">
+  <span class="cd-label">► GATE 2027 T-MINUS:</span>
+  <div class="cd-unit"><span class="cd-n" id="cdD">000</span><span class="cd-u">DAYS</span></div>
+  <span class="cd-sep">:</span>
+  <div class="cd-unit"><span class="cd-n" id="cdH">00</span><span class="cd-u">HRS</span></div>
+  <span class="cd-sep">:</span>
+  <div class="cd-unit"><span class="cd-n" id="cdM">00</span><span class="cd-u">MIN</span></div>
+  <span class="cd-sep">:</span>
+  <div class="cd-unit"><span class="cd-n" id="cdS">00</span><span class="cd-u">SEC</span></div>
+  <div class="cd-phase">[ PHASE 1 — ACTIVE ]</div>
+</div>
+<div class="cd-progress-wrap"><div class="cd-progress-fill" id="cdProgress" style="width:14%"></div></div>
+
+<div class="terminal-wrap">
+
+<!-- HERO -->
+<div class="hero-term">
+  <div class="term-prompt-line">
+    <span class="prompt-user">tamz</span><span class="prompt-at">@</span><span class="prompt-host">gate-cse-2027</span><span class="prompt-at">:</span><span class="prompt-path">~</span><span class="prompt-sym">$</span>
+    <span class="term-typed" id="hero-typed"></span>
+  </div>
+  <div class="term-output" id="hero-output" style="display:none">
+    <div class="hero-ascii" id="ascii-art"></div>
+    <div class="hero-tagline">System: <span>TAMZ GATE CSE 2027 + Placement Hub</span></div>
+    <div class="hero-tagline">Status: <span style="color:var(--green)">● ACTIVE</span> &nbsp;|&nbsp; Phase: <span>1 / 5</span> &nbsp;|&nbsp; Week: <span>W5</span> &nbsp;|&nbsp; Target: <span style="color:var(--cyan)">IISc MTech CSE</span></div>
+    <div class="sys-info-grid" style="margin-top:14px">
+      <div class="sys-row"><span class="sys-key">OS_KERNEL</span><span class="sys-val">Operating Systems (Active)</span></div>
+      <div class="sys-row"><span class="sys-key">DSA_RUNTIME</span><span class="sys-val">Binary Search — W5 — 9 probs</span></div>
+      <div class="sys-row"><span class="sys-key">GATE_TARGET</span><span class="sys-val">Feb 2027 (AIR &lt; 200)</span></div>
+      <div class="sys-row"><span class="sys-key">PYQ_LOADED</span><span class="sys-val">1,492 questions indexed</span></div>
+      <div class="sys-row"><span class="sys-key">MODULES</span><span class="sys-val">11 tools mounted</span></div>
+      <div class="sys-row"><span class="sys-key">UPTIME</span><span class="sys-val">Started May 2026</span></div>
+    </div>
+    <div style="margin-top:14px;font-size:11px;color:var(--faint)">
+      Type <span style="color:var(--green)">help</span> for commands &nbsp;|&nbsp;
+      Type <span style="color:var(--green)">ls</span> to list tools &nbsp;|&nbsp;
+      Type <span style="color:var(--green)">open &lt;module&gt;</span> to launch
+    </div>
+  </div>
+</div>
+
+<!-- INTERACTIVE TERMINAL -->
+<div class="live-terminal">
+  <div class="lt-titlebar">
+    <div class="lt-dots">
+      <div class="lt-dot" style="background:#ff5f56"></div>
+      <div class="lt-dot" style="background:#ffbd2e"></div>
+      <div class="lt-dot" style="background:#27c93f"></div>
+    </div>
+    <div class="lt-name">tamz@gate-cse-2027 — bash — 980×480</div>
+    <div class="lt-hint">try: help / ls / open os / roadmap ai</div>
+  </div>
+  <div class="lt-output" id="ltOutput">
+    <div class="lo-line lo-comment">// TAMZ terminal ready. Type a command below.</div>
+    <div class="lo-line lo-comment">// Quick commands: help · ls · open os · open dbms · open cn · roadmap · roadmap ai · status · pyq · dsa · trend · cbt · neofetch</div>
+  </div>
+  <div class="lt-input-row">
+    <div class="lt-prompt-pre"><span style="color:var(--green)">tamz</span><span style="color:var(--muted)">@gate</span><span style="color:var(--muted)">:</span><span style="color:var(--amber)">~</span><span style="color:var(--green)">$</span></div>
+    <input class="lt-input" id="ltInput" placeholder="type a command..." autocomplete="off" spellcheck="false">
+  </div>
+</div>
+
+<!-- SECTION: TOOLS -->
+<div class="sec-cmd">
+  <div class="sec-cmd-line">
+    <span class="prompt-user">tamz</span><span class="prompt-at">@gate:</span><span class="prompt-path">~/tools</span><span class="prompt-sym">$</span>
+    <span class="lo-ok" style="margin-left:6px">ls -la --color=always</span>
+  </div>
+  <div class="sec-title-out">
+    <div class="sec-title">prep &amp; study modules</div>
+    <div class="sec-desc">5 core tools · notes, roadmap, DSA, resources, hub</div>
+  </div>
+</div>
+<div class="tool-grid">
+  <a href="https://gatetamz.vercel.app/" target="_blank" class="tool-card" style="--c:var(--cyan);--cg:var(--cyan-dim)">
+    <div class="tc-top"><span class="tc-cmd">$ open roadmap</span><span class="tc-status">MOUNTED</span></div>
+    <div class="tc-name">GATE + Placement Roadmap</div>
+    <div class="tc-desc">W1–W35 · 5 phases · May 2026–Feb 2027. OS → DBMS → CN front-loaded for placements. DSA runs every day throughout all 35 weeks.</div>
+    <div class="tc-pills"><span class="tc-pill">35 WEEKS</span><span class="tc-pill">5 PHASES</span><span class="tc-pill">PLACEMENT TRACK</span></div>
+    <div class="tc-footer"><span class="tc-tag">gatetamz.vercel.app</span><span class="tc-open">[ OPEN ↗ ]</span></div>
+  </a>
+  <a href="https://gatenote.vercel.app/" target="_blank" class="tool-card" style="--c:var(--green);--cg:var(--green-dim)">
+    <div class="tc-top"><span class="tc-cmd">$ open notes</span><span class="tc-status">MOUNTED</span></div>
+    <div class="tc-name">GATE CSE Notes Hub</div>
+    <div class="tc-desc">Notes, PDFs, playlists for all 16 subjects. Curated from top educators — Abdul Bari, GO Classes, Gate Smashers.</div>
+    <div class="tc-pills"><span class="tc-pill">16 SUBJECTS</span><span class="tc-pill">PDFS</span><span class="tc-pill">PLAYLISTS</span></div>
+    <div class="tc-footer"><span class="tc-tag">gatenote.vercel.app</span><span class="tc-open">[ OPEN ↗ ]</span></div>
+  </a>
+  <a href="https://dsatamz.vercel.app/" target="_blank" class="tool-card" style="--c:var(--amber);--cg:rgba(255,176,0,0.06)">
+    <div class="tc-top"><span class="tc-cmd">$ open dsa</span><span class="tc-status">MOUNTED</span></div>
+    <div class="tc-name">DSA Question Bank</div>
+    <div class="tc-desc">260+ problems · LeetCode + GFG + Codeforces. Week-by-week from arrays to LC Hard. Phase 1–5 coverage.</div>
+    <div class="tc-pills"><span class="tc-pill">260+ PROBS</span><span class="tc-pill">LC · GFG · CF</span><span class="tc-pill">W1–W35</span></div>
+    <div class="tc-footer"><span class="tc-tag">dsatamz.vercel.app</span><span class="tc-open">[ OPEN ↗ ]</span></div>
+  </a>
+  <a href="https://gatecsehub.vercel.app/" target="_blank" class="tool-card" style="--c:var(--purple);--cg:rgba(191,95,255,0.06)">
+    <div class="tc-top"><span class="tc-cmd">$ open hub</span><span class="tc-status">MOUNTED</span></div>
+    <div class="tc-name">GATE CSE Hub</div>
+    <div class="tc-desc">All 16 subjects · PDF downloads · Free. Single consolidated resource drop for every GATE CSE topic.</div>
+    <div class="tc-pills"><span class="tc-pill">16 SUBJECTS</span><span class="tc-pill">FREE</span><span class="tc-pill">PDFs</span></div>
+    <div class="tc-footer"><span class="tc-tag">gatecsehub.vercel.app</span><span class="tc-open">[ OPEN ↗ ]</span></div>
+  </a>
+  <a href="https://gatetamzresources.vercel.app/" target="_blank" class="tool-card" style="--c:var(--red);--cg:rgba(255,51,51,0.06)">
+    <div class="tc-top"><span class="tc-cmd">$ open resources</span><span class="tc-status">MOUNTED</span></div>
+    <div class="tc-name">Resource Links</div>
+    <div class="tc-desc">Striver, Abdul Bari, GO Classes, Gate Smashers, Neso Academy — all curated external links in one place.</div>
+    <div class="tc-pills"><span class="tc-pill">STRIVER</span><span class="tc-pill">GO CLASSES</span><span class="tc-pill">NESO</span></div>
+    <div class="tc-footer"><span class="tc-tag">gatetamzresources.vercel.app</span><span class="tc-open">[ OPEN ↗ ]</span></div>
+  </a>
+</div>
+
+<!-- SECTION: PYQ & AI -->
+<div class="sec-cmd">
+  <div class="sec-cmd-line">
+    <span class="prompt-user">tamz</span><span class="prompt-at">@gate:</span><span class="prompt-path">~/pyq</span><span class="prompt-sym">$</span>
+    <span class="lo-ok" style="margin-left:6px">ls --sort=relevance</span>
+  </div>
+  <div class="sec-title-out">
+    <div class="sec-title">pyq &amp; intelligence modules</div>
+    <div class="sec-desc">4 tools · 1,492 PYQs indexed · AI tutor · trend engine</div>
+  </div>
+</div>
+<div class="tool-grid">
+  <a href="https://tahagateai.vercel.app/" target="_blank" class="tool-card" style="--c:var(--cyan);--cg:var(--cyan-dim)">
+    <div class="tc-top"><span class="tc-cmd">$ open ai</span><span class="tc-status" style="color:var(--cyan)">AI-POWERED</span></div>
+    <div class="tc-name">AI Tutor</div>
+    <div class="tc-desc">1,492 PYQs · BM25 + semantic search. Ask any GATE topic and get instant explanations, solutions, concept breakdowns.</div>
+    <div class="tc-pills"><span class="tc-pill">1,492 PYQs</span><span class="tc-pill">SEMANTIC SEARCH</span><span class="tc-pill">FREE</span></div>
+    <div class="tc-footer"><span class="tc-tag">tahagateai.vercel.app</span><span class="tc-open">[ OPEN ↗ ]</span></div>
+  </a>
+  <a href="https://gateecotaha.vercel.app/" target="_blank" class="tool-card" style="--c:#6080ff;--cg:rgba(96,128,255,0.06)">
+    <div class="tc-top"><span class="tc-cmd">$ open intelligence</span><span class="tc-status">MOUNTED</span></div>
+    <div class="tc-name">GATE Intelligence — CSE Bank</div>
+    <div class="tc-desc">Flashcards · Bookmarks · Analytics · 1,484 PYQs. 26 years of GATE data. Spaced repetition + personal dashboard.</div>
+    <div class="tc-pills"><span class="tc-pill">1,484 PYQs</span><span class="tc-pill">FLASHCARDS</span><span class="tc-pill">26 YEARS</span></div>
+    <div class="tc-footer"><span class="tc-tag">gateecotaha.vercel.app</span><span class="tc-open">[ OPEN ↗ ]</span></div>
+  </a>
+  <a href="https://gatepvq.vercel.app/" target="_blank" class="tool-card" style="--c:var(--green);--cg:var(--green-dim)">
+    <div class="tc-top"><span class="tc-cmd">$ open pyq</span><span class="tc-status">MOUNTED</span></div>
+    <div class="tc-name">PYQ Question Bank</div>
+    <div class="tc-desc">21 subjects · 8 core CS · 4 aptitude areas. Topic-wise previous year questions. Filter by subject or year.</div>
+    <div class="tc-pills"><span class="tc-pill">21 SUBJECTS</span><span class="tc-pill">TOPIC-WISE</span><span class="tc-pill">YEAR FILTER</span></div>
+    <div class="tc-footer"><span class="tc-tag">gatepvq.vercel.app</span><span class="tc-open">[ OPEN ↗ ]</span></div>
+  </a>
+  <a href="https://tahagatetrend.vercel.app/" target="_blank" class="tool-card" style="--c:var(--purple);--cg:rgba(191,95,255,0.06)">
+    <div class="tc-top"><span class="tc-cmd">$ open trend</span><span class="tc-status">MOUNTED</span></div>
+    <div class="tc-name">GATE CSE Trend Analysis</div>
+    <div class="tc-desc">1,492 Qs · 16 subjects · 2010–2025 · 41 topics tracked. Rising: Graph Theory + SQL tied at #1. NAT growing to 34%.</div>
+    <div class="tc-pills"><span class="tc-pill">HEATMAP</span><span class="tc-pill">RISING TOPICS</span><span class="tc-pill">2010–2025</span></div>
+    <div class="tc-footer"><span class="tc-tag">tahagatetrend.vercel.app</span><span class="tc-open">[ OPEN ↗ ]</span></div>
+  </a>
+</div>
+
+<!-- SECTION: CBT -->
+<div class="sec-cmd">
+  <div class="sec-cmd-line">
+    <span class="prompt-user">tamz</span><span class="prompt-at">@gate:</span><span class="prompt-path">~/exam</span><span class="prompt-sym">$</span>
+    <span class="lo-ok" style="margin-left:6px">ls --type=simulator</span>
+  </div>
+  <div class="sec-title-out">
+    <div class="sec-title">exam simulation</div>
+    <div class="sec-desc">2 CBT simulators · full paper + subject-specific</div>
+  </div>
+</div>
+<div class="tool-grid">
+  <a href="https://tahagatecbt.vercel.app/" target="_blank" class="tool-card" style="--c:#78909c;--cg:rgba(120,144,156,0.06)">
+    <div class="tc-top"><span class="tc-cmd">$ open cbt</span><span class="tc-status">MOUNTED</span></div>
+    <div class="tc-name">GATE CBT Simulator</div>
+    <div class="tc-desc">Full Computer Based Test · GATE-style interface · 65 questions · 180-min timer · question nav panel · review mode. Desktop recommended.</div>
+    <div class="tc-pills"><span class="tc-pill">65 QUESTIONS</span><span class="tc-pill">180 MIN</span><span class="tc-pill">DESKTOP</span></div>
+    <div class="tc-footer"><span class="tc-tag">tahagatecbt.vercel.app</span><span class="tc-open">[ OPEN ↗ ]</span></div>
+  </a>
+  <a href="https://tahagatesubjectcbt.vercel.app/" target="_blank" class="tool-card" style="--c:var(--green2);--cg:var(--green-dim)">
+    <div class="tc-top"><span class="tc-cmd">$ open subjectcbt</span><span class="tc-status">MOUNTED</span></div>
+    <div class="tc-name">Subject CBT Simulator</div>
+    <div class="tc-desc">Subject-specific CBT practice in the same GATE interface. Drill one subject at a time. Ideal for end-of-phase mock tests.</div>
+    <div class="tc-pills"><span class="tc-pill">SUBJECT-WISE</span><span class="tc-pill">GATE UI</span><span class="tc-pill">PHASE MOCKS</span></div>
+    <div class="tc-footer"><span class="tc-tag">tahagatesubjectcbt.vercel.app</span><span class="tc-open">[ OPEN ↗ ]</span></div>
+  </a>
+</div>
+
+<!-- SECTION: ROADMAP -->
+<div class="sec-cmd">
+  <div class="sec-cmd-line">
+    <span class="prompt-user">tamz</span><span class="prompt-at">@gate:</span><span class="prompt-path">~/roadmap</span><span class="prompt-sym">$</span>
+    <span class="lo-ok" style="margin-left:6px">cat phases.json | jq '.phases[]'</span>
+  </div>
+  <div class="sec-title-out">
+    <div class="sec-title">5-phase execution plan</div>
+    <div class="sec-desc">OS → DBMS → CN (placement-first) then GATE-only subjects. W5 active now.</div>
+  </div>
+</div>
+<div class="phase-list">
+  <a href="https://gatetamz.vercel.app/" target="_blank" class="phase-row" style="--ph:#00d4ff">
+    <div class="ph-num">1</div>
+    <div class="ph-body">
+      <div class="ph-info">
+        <div class="ph-cmd">$ run phase_1.sh</div>
+        <div class="ph-name">OS + Arrays, Two Pointers, Sliding Window, Stack, Binary Search, Linked Lists, Trees</div>
+        <div class="ph-range">May – July 2026 · W1–W8 · 80 LC target</div>
+      </div>
+      <div class="ph-tags">
+        <span class="ph-tag">OS</span>
+        <span class="ph-tag">DSA FUNDAMENTALS</span>
+        <span class="ph-tag" style="background:rgba(0,212,255,0.1)">ACTIVE ● W5</span>
+      </div>
+      <div class="ph-right">
+        <span class="ph-pct">W5 / W8 — 62%</span>
+        <div class="ph-bar-w"><div class="ph-bar" data-w="62"></div></div>
+      </div>
+    </div>
+    <span class="ph-arr">→</span>
+  </a>
+  <a href="https://gatetamz.vercel.app/" target="_blank" class="phase-row" style="--ph:var(--green)">
+    <div class="ph-num">2</div>
+    <div class="ph-body">
+      <div class="ph-info">
+        <div class="ph-cmd">$ run phase_2.sh</div>
+        <div class="ph-name">DBMS + Heaps, Greedy, 1D/2D DP, Advanced DP, Graphs BFS/DFS, Shortest Path, Tries</div>
+        <div class="ph-range">July – August 2026 · W9–W16 · 152 LC target</div>
+      </div>
+      <div class="ph-tags"><span class="ph-tag">DBMS</span><span class="ph-tag">DP + GRAPHS</span></div>
+      <div class="ph-right">
+        <span class="ph-pct">QUEUED</span>
+        <div class="ph-bar-w"><div class="ph-bar" data-w="0"></div></div>
+      </div>
+    </div>
+    <span class="ph-arr">→</span>
+  </a>
+  <a href="https://gatetamz.vercel.app/" target="_blank" class="phase-row" style="--ph:var(--purple)">
+    <div class="ph-num">3</div>
+    <div class="ph-body">
+      <div class="ph-info">
+        <div class="ph-cmd">$ run phase_3.sh</div>
+        <div class="ph-name">Computer Networks + DP on Trees, Bit Manipulation, Advanced Graphs, Mock OA Rounds</div>
+        <div class="ph-range">September – October 2026 · W17–W24 · 210 LC target</div>
+      </div>
+      <div class="ph-tags"><span class="ph-tag">CN</span><span class="ph-tag">MOCK OAs</span></div>
+      <div class="ph-right">
+        <span class="ph-pct">QUEUED</span>
+        <div class="ph-bar-w"><div class="ph-bar" data-w="0"></div></div>
+      </div>
+    </div>
+    <span class="ph-arr">→</span>
+  </a>
+  <a href="https://gatetamz.vercel.app/" target="_blank" class="phase-row" style="--ph:var(--amber)">
+    <div class="ph-num">4</div>
+    <div class="ph-body">
+      <div class="ph-info">
+        <div class="ph-cmd">$ run phase_4.sh</div>
+        <div class="ph-name">Discrete Math, TOC, Compiler, COA + LC Hard focus, Contests, Mock Interviews</div>
+        <div class="ph-range">October – December 2026 · W25–W32 · 253 LC target</div>
+      </div>
+      <div class="ph-tags"><span class="ph-tag">TOC</span><span class="ph-tag">COMPILER</span><span class="ph-tag">COA</span><span class="ph-tag">LC HARD</span></div>
+      <div class="ph-right">
+        <span class="ph-pct">QUEUED</span>
+        <div class="ph-bar-w"><div class="ph-bar" data-w="0"></div></div>
+      </div>
+    </div>
+    <span class="ph-arr">→</span>
+  </a>
+  <a href="https://gatetamz.vercel.app/" target="_blank" class="phase-row" style="--ph:var(--red)">
+    <div class="ph-num">5</div>
+    <div class="ph-body">
+      <div class="ph-info">
+        <div class="ph-cmd">$ run phase_5.sh --final-sprint</div>
+        <div class="ph-name">Final Sprint — PYQ marathon, 2 full mocks/week, placement interviews, formula revision</div>
+        <div class="ph-range">December 2026 – February 2027 · W33–W35+ · 15+ full mocks</div>
+      </div>
+      <div class="ph-tags"><span class="ph-tag">FINAL REVISION</span><span class="ph-tag">MOCK OA ×2/WEEK</span></div>
+      <div class="ph-right">
+        <span class="ph-pct">FINAL</span>
+        <div class="ph-bar-w"><div class="ph-bar" data-w="0"></div></div>
+      </div>
+    </div>
+    <span class="ph-arr">→</span>
+  </a>
+</div>
+
+<!-- SECTION: SUBJECTS -->
+<div class="sec-cmd" style="margin-top:28px">
+  <div class="sec-cmd-line">
+    <span class="prompt-user">tamz</span><span class="prompt-at">@gate:</span><span class="prompt-path">~/syllabus</span><span class="prompt-sym">$</span>
+    <span class="lo-ok" style="margin-left:6px">cat subjects.conf</span>
+  </div>
+  <div class="sec-title-out">
+    <div class="sec-title">16 gate cse subjects</div>
+    <div class="sec-desc">No subject scored zero in any year 2014–2025 — breadth matters.</div>
+  </div>
+</div>
+<div class="subj-grid">
+  <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="color:var(--cyan)"></span><span class="subj-name">Data Structures</span><span class="subj-tag">Core</span></a>
+  <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="color:var(--cyan)"></span><span class="subj-name">Algorithms</span><span class="subj-tag">Core</span></a>
+  <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="color:var(--green);background:var(--green)"></span><span class="subj-name">Operating Systems</span><span class="subj-tag" style="color:var(--green)">Phase 1 ●</span></a>
+  <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="color:var(--green);background:var(--green)"></span><span class="subj-name">DBMS</span><span class="subj-tag">Phase 2</span></a>
+  <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="color:var(--purple);background:var(--purple)"></span><span class="subj-name">Computer Networks</span><span class="subj-tag">Phase 3</span></a>
+  <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="color:var(--amber);background:var(--amber)"></span><span class="subj-name">Theory of Computation</span><span class="subj-tag">Phase 4</span></a>
+  <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="color:var(--amber);background:var(--amber)"></span><span class="subj-name">Compiler Design</span><span class="subj-tag">Phase 4</span></a>
+  <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="color:var(--amber);background:var(--amber)"></span><span class="subj-name">Computer Organization</span><span class="subj-tag">Phase 4</span></a>
+  <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="color:var(--amber);background:var(--amber)"></span><span class="subj-name">Digital Logic</span><span class="subj-tag">Phase 4</span></a>
+  <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="background:var(--muted)"></span><span class="subj-name">Discrete Mathematics</span><span class="subj-tag">Foundation</span></a>
+  <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="background:var(--muted)"></span><span class="subj-name">Linear Algebra</span><span class="subj-tag">Foundation</span></a>
+  <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="background:var(--muted)"></span><span class="subj-name">Probability &amp; Statistics</span><span class="subj-tag">Foundation</span></a>
+  <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="background:var(--muted)"></span><span class="subj-name">Calculus</span><span class="subj-tag">Foundation</span></a>
+  <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="color:var(--cyan);background:var(--cyan)"></span><span class="subj-name">C Programming</span><span class="subj-tag">Core</span></a>
+  <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="background:var(--muted)"></span><span class="subj-name">General Aptitude</span><span class="subj-tag">Aptitude</span></a>
+  <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="background:var(--muted)"></span><span class="subj-name">Engineering Maths</span><span class="subj-tag">Foundation</span></a>
+</div>
+
+<!-- DSA -->
+<div class="sec-cmd" style="margin-top:28px">
+  <div class="sec-cmd-line">
+    <span class="prompt-user">tamz</span><span class="prompt-at">@gate:</span><span class="prompt-path">~/dsa</span><span class="prompt-sym">$</span>
+    <span class="lo-ok" style="margin-left:6px">cat dsa_bank.json | jq '.weeks[] | .name, .count'</span>
+  </div>
+  <div class="sec-title-out">
+    <div class="sec-title">week-by-week dsa problem bank</div>
+    <div class="sec-desc">260+ problems · LeetCode · GFG · Codeforces · Phase 1–5</div>
+  </div>
+</div>
+<div class="dsa-grid">
+  <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="background:var(--cyan)"></span><span class="subj-name">W1 — Arrays + Hashing</span><span class="subj-tag">12 probs</span></a>
+  <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="background:var(--cyan)"></span><span class="subj-name">W2 — Two Pointers</span><span class="subj-tag">12 probs</span></a>
+  <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="background:var(--cyan)"></span><span class="subj-name">W3 — Sliding Window</span><span class="subj-tag">10 probs</span></a>
+  <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="background:var(--cyan)"></span><span class="subj-name">W4 — Stack &amp; Monotonic Stack</span><span class="subj-tag">9 probs</span></a>
+  <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="background:var(--cyan)"></span><span class="subj-name">W5 — Binary Search</span><span class="subj-tag" style="color:var(--green)">ACTIVE ●</span></a>
+  <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="background:var(--cyan)"></span><span class="subj-name">W6 — Linked Lists</span><span class="subj-tag">9 probs</span></a>
+  <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="background:var(--cyan)"></span><span class="subj-name">W7 — Trees &amp; BST</span><span class="subj-tag">11 probs</span></a>
+  <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="background:var(--cyan)"></span><span class="subj-name">W8 — Tries &amp; Hash Maps</span><span class="subj-tag">9 probs</span></a>
+  <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="background:var(--green)"></span><span class="subj-name">W9 — Heaps &amp; Priority Queue</span><span class="subj-tag">9 probs</span></a>
+  <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="background:var(--green)"></span><span class="subj-name">W10 — Greedy Algorithms</span><span class="subj-tag">~8 probs</span></a>
+  <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="background:var(--green)"></span><span class="subj-name">W11 — DP 1D Patterns</span><span class="subj-tag">10 probs</span></a>
+  <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="background:var(--green)"></span><span class="subj-name">W12 — DP 2D + LCS, LIS</span><span class="subj-tag">10 probs</span></a>
+  <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="background:var(--green)"></span><span class="subj-name">W14 — Graphs BFS/DFS/Topo Sort</span><span class="subj-tag">10 probs</span></a>
+  <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="background:var(--purple)"></span><span class="subj-name">W17 — DP on Trees</span><span class="subj-tag">Phase 3</span></a>
+  <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="background:var(--purple)"></span><span class="subj-name">W19 — Advanced Graphs + MST</span><span class="subj-tag">Phase 3</span></a>
+  <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><span class="subj-dot" style="background:var(--purple)"></span><span class="subj-name">W21–W24 — Mock OA Rounds</span><span class="subj-tag">Phase 3</span></a>
+  <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item" style="border-color:var(--green2);background:var(--green-dim)"><span class="subj-dot" style="background:var(--green)"></span><span class="subj-name" style="color:var(--green);font-weight:700">$ open dsa -- view all 260+ →</span><span class="subj-tag">W1–W35</span></a>
+</div>
+
+<!-- FOOTER -->
+<div class="term-footer">
+  <div style="font-size:11px;color:var(--faint);margin-bottom:14px">// exit 0 · tamz@gate-cse-2027 · started May 2026</div>
+  <div class="tf-inner">
+    <div>
+      <div class="tf-col-h">// PREP</div>
+      <a href="https://gatetamz.vercel.app/" target="_blank" class="tf-link">$ open roadmap</a>
+      <a href="https://gatenote.vercel.app/" target="_blank" class="tf-link">$ open notes</a>
+      <a href="https://dsatamz.vercel.app/" target="_blank" class="tf-link">$ open dsa</a>
+      <a href="https://gatecsehub.vercel.app/" target="_blank" class="tf-link">$ open hub</a>
+      <a href="https://gatetamzresources.vercel.app/" target="_blank" class="tf-link">$ open resources</a>
+    </div>
+    <div>
+      <div class="tf-col-h">// PYQ &amp; INTEL</div>
+      <a href="https://gatepvq.vercel.app/" target="_blank" class="tf-link">$ open pyq</a>
+      <a href="https://gateecotaha.vercel.app/" target="_blank" class="tf-link">$ open intelligence</a>
+      <a href="https://tahagateai.vercel.app/" target="_blank" class="tf-link">$ open ai</a>
+      <a href="https://tahagatetrend.vercel.app/" target="_blank" class="tf-link">$ open trend</a>
+    </div>
+    <div>
+      <div class="tf-col-h">// EXAM</div>
+      <a href="https://tahagatecbt.vercel.app/" target="_blank" class="tf-link">$ open cbt</a>
+      <a href="https://tahagatesubjectcbt.vercel.app/" target="_blank" class="tf-link">$ open subjectcbt</a>
+    </div>
+  </div>
+  <div class="tf-note">TAMZ — GATE CSE 2027 · Target IISc MTech CSE · Built May 2026 · © tamz</div>
+</div>
+
+</div><!-- /terminal-wrap -->
+
+<script>
+// ── MATRIX RAIN ──
+(function(){
+  var c=document.getElementById('matrix-canvas');
+  var ctx=c.getContext('2d');
+  function resize(){c.width=window.innerWidth;c.height=window.innerHeight}
+  resize();
+  window.addEventListener('resize',resize);
+  var chars='アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモラリルレロワヲンABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*(){}[]<>?/\\|';
+  var cols=Math.floor(window.innerWidth/16);
+  var drops=new Array(cols).fill(1);
+  function draw(){
+    ctx.fillStyle='rgba(2,11,2,0.05)';
+    ctx.fillRect(0,0,c.width,c.height);
+    ctx.fillStyle='#00ff41';
+    ctx.font='14px JetBrains Mono,monospace';
+    for(var i=0;i<drops.length;i++){
+      var ch=chars[Math.floor(Math.random()*chars.length)];
+      ctx.fillText(ch,i*16,drops[i]*16);
+      if(drops[i]*16>c.height&&Math.random()>0.975) drops[i]=0;
+      drops[i]++;
+    }
+  }
+  setInterval(draw,50);
+})();
+
+// ── CLOCK ──
+function updateClock(){
+  var now=new Date();
+  var h=String(now.getHours()).padStart(2,'0');
+  var m=String(now.getMinutes()).padStart(2,'0');
+  var s=String(now.getSeconds()).padStart(2,'0');
+  var el=document.getElementById('tbTime');
+  if(el) el.textContent=h+':'+m+':'+s;
+}
+setInterval(updateClock,1000);
+updateClock();
+
+// ── COUNTDOWN ──
+function updateCD(){
+  // GATE 2027 approx Feb 1, 2027
+  var target=new Date('2027-02-01T09:00:00+05:30');
+  var now=new Date();
+  var diff=target-now;
+  if(diff<0) diff=0;
+  var d=Math.floor(diff/86400000);
+  var h=Math.floor((diff%86400000)/3600000);
+  var m=Math.floor((diff%3600000)/60000);
+  var s=Math.floor((diff%60000)/1000);
+  var setEl=function(id,v){var el=document.getElementById(id);if(el)el.textContent=String(v).padStart(id==='cdD'?3:2,'0')};
+  setEl('cdD',d);setEl('cdH',h);setEl('cdM',m);setEl('cdS',s);
+}
+setInterval(updateCD,1000);
+updateCD();
+
+// ── BOOT SEQUENCE ──
+var ASCII_ART=
+'  ████████╗ █████╗ ███╗   ███╗███████╗\n'+
+'     ██╔══╝██╔══██╗████╗ ████║╚══███╔╝\n'+
+'     ██║   ███████║██╔████╔██║  ███╔╝ \n'+
+'     ██║   ██╔══██║██║╚██╔╝██║ ███╔╝  \n'+
+'     ██║   ██║  ██║██║ ╚═╝ ██║███████╗\n'+
+'     ╚═╝   ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝\n'+
+'  GATE CSE 2027 — TERMINAL PORTAL v4.1\n'+
+'  ─────────────────────────────────────';
+
+var bootLines=[
+  'Mounting filesystem... OK',
+  'Loading kernel modules... OK',
+  'Initializing 1,492 PYQ index... OK',
+  'Starting AI tutor daemon... OK',
+  'Connecting DSA bank (260+ probs)... OK',
+  'Loading 5-phase roadmap... OK',
+  'Enabling matrix renderer... OK',
+  'System ready. Booting terminal...',
+];
+var bootEl=document.getElementById('bootLine');
+var bootBar=document.getElementById('bootBar');
+var bootPct=document.getElementById('bootPct');
+var bootLogo=document.getElementById('bootLogo');
+var bootScreen=document.getElementById('boot-screen');
+
+// Animate logo
+var logoChars=ASCII_ART.split('');
+var li=0;
+var logoInterval=setInterval(function(){
+  if(li<logoChars.length){
+    bootLogo.textContent+=logoChars[li++];
+  } else {
+    clearInterval(logoInterval);
+  }
+},8);
+
+var bi=0;
+var pct=0;
+var barInterval=setInterval(function(){
+  if(bi<bootLines.length){
+    bootEl.textContent=bootLines[bi++];
+    pct=Math.round((bi/bootLines.length)*100);
+    bootBar.style.width=pct+'%';
+    bootPct.textContent=pct+'%';
+  } else {
+    clearInterval(barInterval);
+    setTimeout(function(){
+      bootScreen.classList.add('fade-out');
+      setTimeout(function(){
+        bootScreen.style.display='none';
+        startHeroType();
+      },500);
+    },400);
+  }
+},280);
+
+// ── HERO TYPING ──
+function startHeroType(){
+  var heroTyped=document.getElementById('hero-typed');
+  var heroOutput=document.getElementById('hero-output');
+  var cmd='./tamz --init --version';
+  var i=0;
+  var t=setInterval(function(){
+    if(i<cmd.length){
+      heroTyped.textContent+=cmd[i++];
+    } else {
+      clearInterval(t);
+      setTimeout(function(){
+        document.getElementById('ascii-art').textContent=ASCII_ART;
+        heroOutput.style.display='block';
+        animatePhaseBars();
+      },300);
+    }
+  },60);
+}
+
+// ── PHASE BARS ──
+function animatePhaseBars(){
+  document.querySelectorAll('.ph-bar[data-w]').forEach(function(bar){
+    setTimeout(function(){bar.style.width=bar.getAttribute('data-w')+'%'},100);
+  });
+}
+
+// ── LIVE TERMINAL ──
+var COMMANDS={
+  help: function(){return [
+    {t:'info',  txt:'┌─ TAMZ TERMINAL v4.1 — COMMAND REFERENCE ─────────────────┐'},
+    {t:'comment',txt:''},
+    {t:'info',  txt:'  NAVIGATION'},
+    {t:'ok',    txt:'  ls                  List all tools'},
+    {t:'ok',    txt:'  ls --type=pyq        Filter by category (prep|pyq|exam)'},
+    {t:'ok',    txt:'  cd <section>         Jump to section (roadmap|pyq|exam|dsa)'},
+    {t:'comment',txt:''},
+    {t:'info',  txt:'  LAUNCH TOOLS'},
+    {t:'ok',    txt:'  open roadmap         GATE + Placement Roadmap (W1–W35)'},
+    {t:'ok',    txt:'  open os              Operating Systems — Phase 1'},
+    {t:'ok',    txt:'  open dbms            DBMS — Phase 2'},
+    {t:'ok',    txt:'  open cn              Computer Networks — Phase 3'},
+    {t:'ok',    txt:'  open notes           GATE CSE Notes Hub'},
+    {t:'ok',    txt:'  open dsa             DSA Question Bank (260+ problems)'},
+    {t:'ok',    txt:'  open pyq             PYQ Question Bank (21 subjects)'},
+    {t:'ok',    txt:'  open ai              AI Tutor (1,492 PYQs, semantic search)'},
+    {t:'ok',    txt:'  open intelligence    GATE Intelligence — Flashcards + Analytics'},
+    {t:'ok',    txt:'  open trend           GATE Trend Analysis (2010–2025)'},
+    {t:'ok',    txt:'  open cbt             Full GATE CBT Simulator (65q, 180min)'},
+    {t:'ok',    txt:'  open subjectcbt      Subject-wise CBT Practice'},
+    {t:'ok',    txt:'  open hub             GATE CSE Hub (PDF downloads)'},
+    {t:'ok',    txt:'  open resources       External Resource Links'},
+    {t:'comment',txt:''},
+    {t:'info',  txt:'  INFO COMMANDS'},
+    {t:'ok',    txt:'  status               Current week, phase, progress'},
+    {t:'ok',    txt:'  roadmap              Full 5-phase plan'},
+    {t:'ok',    txt:'  roadmap ai           AI Tutor shortcut'},
+    {t:'ok',    txt:'  pyq                  Quick PYQ stats'},
+    {t:'ok',    txt:'  dsa                  DSA bank summary'},
+    {t:'ok',    txt:'  trend                Trend analysis data'},
+    {t:'ok',    txt:'  neofetch             System info panel'},
+    {t:'ok',    txt:'  clear                Clear terminal'},
+    {t:'comment',txt:''},
+    {t:'info',  txt:'└───────────────────────────────────────────────────────────┘'},
+  ]},
+
+  ls: function(args){
+    var filter=args&&args.includes('--type=pyq')?'pyq':args&&args.includes('--type=exam')?'exam':null;
+    var all=[
+      {cmd:'roadmap',   cat:'prep',  url:'https://gatetamz.vercel.app/',         desc:'W1–W35 roadmap · 5 phases',        status:'MOUNTED'},
+      {cmd:'notes',     cat:'prep',  url:'https://gatenote.vercel.app/',          desc:'16 subjects · PDFs · playlists',   status:'MOUNTED'},
+      {cmd:'dsa',       cat:'prep',  url:'https://dsatamz.vercel.app/',           desc:'260+ problems · LC · GFG · CF',    status:'MOUNTED'},
+      {cmd:'hub',       cat:'prep',  url:'https://gatecsehub.vercel.app/',        desc:'16 subjects · PDF downloads',      status:'MOUNTED'},
+      {cmd:'resources', cat:'prep',  url:'https://gatetamzresources.vercel.app/',desc:'Striver · Abdul Bari · GO Classes', status:'MOUNTED'},
+      {cmd:'ai',        cat:'pyq',   url:'https://tahagateai.vercel.app/',        desc:'1,492 PYQs · BM25 + semantic',     status:'AI-LIVE'},
+      {cmd:'intelligence',cat:'pyq', url:'https://gateecotaha.vercel.app/',       desc:'1,484 PYQs · Flashcards · Analytics',status:'MOUNTED'},
+      {cmd:'pyq',       cat:'pyq',   url:'https://gatepvq.vercel.app/',           desc:'21 subjects · topic-wise',         status:'MOUNTED'},
+      {cmd:'trend',     cat:'pyq',   url:'https://tahagatetrend.vercel.app/',     desc:'41 topics · 2010–2025 heatmap',    status:'MOUNTED'},
+      {cmd:'cbt',       cat:'exam',  url:'https://tahagatecbt.vercel.app/',       desc:'65q · 180min · full paper',        status:'MOUNTED'},
+      {cmd:'subjectcbt',cat:'exam',  url:'https://tahagatesubjectcbt.vercel.app/',desc:'Subject-wise GATE CBT',            status:'MOUNTED'},
+    ];
+    var items=filter?all.filter(function(x){return x.cat===filter}):all;
+    var out=[{t:'info',txt:'total '+items.length+' tools mounted\n'}];
+    items.forEach(function(x){
+      out.push({t:'table-row',cmd:x.cmd,url:x.url,desc:x.desc,status:x.status});
+    });
+    return out;
+  },
+
+  status: function(){
+    var now=new Date();
+    var target=new Date('2027-02-01T09:00:00+05:30');
+    var diff=target-now;
+    var days=Math.floor(diff/86400000);
+    return [
+      {t:'info',  txt:'● SYSTEM STATUS — '+now.toDateString()},
+      {t:'comment',txt:''},
+      {t:'ok',    txt:'  user           tamz'},
+      {t:'ok',    txt:'  target         IISc MTech CSE (AIR < 200)'},
+      {t:'ok',    txt:'  current_phase  Phase 1 / 5'},
+      {t:'ok',    txt:'  current_week   W5 / W35'},
+      {t:'ok',    txt:'  active_subject Operating Systems'},
+      {t:'ok',    txt:'  active_dsa     Binary Search — W5 (9 problems)'},
+      {t:'am',    txt:'  lc_target      80 by end of Phase 1 (W8)'},
+      {t:'ok',    txt:'  days_to_gate   '+days+' days'},
+      {t:'ok',    txt:'  tools_loaded   11 / 11'},
+      {t:'ok',    txt:'  pyq_indexed    1,492 questions'},
+      {t:'info',  txt:''},
+      {t:'ok',    txt:'  [PHASE 1] ██████████░░░░░░ 62% — W5/W8'},
+      {t:'comment',txt:'  [PHASE 2] ░░░░░░░░░░░░░░░░  0% — QUEUED'},
+      {t:'comment',txt:'  [PHASE 3] ░░░░░░░░░░░░░░░░  0% — QUEUED'},
+      {t:'comment',txt:'  [PHASE 4] ░░░░░░░░░░░░░░░░  0% — QUEUED'},
+      {t:'comment',txt:'  [PHASE 5] ░░░░░░░░░░░░░░░░  0% — FINAL SPRINT'},
+    ]
+  },
+
+  roadmap: function(args){
+    if(args&&(args.includes('ai')||args.includes('--ai'))){
+      window.open('https://tahagateai.vercel.app/','_blank');
+      return [{t:'ok',txt:'Launching AI Tutor... ↗'},{t:'info',txt:'URL: https://tahagateai.vercel.app/'}];
+    }
+    window.open('https://gatetamz.vercel.app/','_blank');
+    return [
+      {t:'ok',txt:'Launching GATE + Placement Roadmap... ↗'},
+      {t:'info',txt:'URL: https://gatetamz.vercel.app/'},
+      {t:'comment',txt:'// W1–W35 · 5 phases · OS→DBMS→CN→GATE-only · DSA daily'},
+    ];
+  },
+
+  open: function(args){
+    var TOOL_MAP={
+      'roadmap':     {url:'https://gatetamz.vercel.app/',          name:'GATE + Placement Roadmap'},
+      'os':          {url:'https://gatenote.vercel.app/',           name:'Operating Systems — Phase 1 (Notes Hub)'},
+      'dbms':        {url:'https://gatenote.vercel.app/',           name:'DBMS — Phase 2 (Notes Hub)'},
+      'cn':          {url:'https://gatenote.vercel.app/',           name:'Computer Networks — Phase 3 (Notes Hub)'},
+      'notes':       {url:'https://gatenote.vercel.app/',           name:'GATE CSE Notes Hub'},
+      'dsa':         {url:'https://dsatamz.vercel.app/',            name:'DSA Question Bank'},
+      'hub':         {url:'https://gatecsehub.vercel.app/',         name:'GATE CSE Hub'},
+      'resources':   {url:'https://gatetamzresources.vercel.app/', name:'Resource Links'},
+      'ai':          {url:'https://tahagateai.vercel.app/',         name:'AI Tutor'},
+      'intelligence':{url:'https://gateecotaha.vercel.app/',        name:'GATE Intelligence'},
+      'pyq':         {url:'https://gatepvq.vercel.app/',            name:'PYQ Question Bank'},
+      'trend':       {url:'https://tahagatetrend.vercel.app/',      name:'GATE Trend Analysis'},
+      'cbt':         {url:'https://tahagatecbt.vercel.app/',        name:'GATE CBT Simulator'},
+      'subjectcbt':  {url:'https://tahagatesubjectcbt.vercel.app/',name:'Subject CBT Simulator'},
+    };
+    var key=args?args.trim().toLowerCase():'';
+    var tool=TOOL_MAP[key];
+    if(!tool){
+      return [
+        {t:'err',txt:'open: module not found: "'+key+'"'},
+        {t:'info',txt:'Available: '+Object.keys(TOOL_MAP).join(' · ')},
+        {t:'comment',txt:'Usage: open <module_name>'},
+      ];
+    }
+    window.open(tool.url,'_blank');
+    return [
+      {t:'ok',txt:'[+] Launching '+tool.name+' ...'},
+      {t:'info',txt:'URL: '+tool.url},
+      {t:'comment',txt:'// opening in new tab...'},
+    ];
+  },
+
+  pyq: function(){
+    return [
+      {t:'info',  txt:'● PYQ DATABASE SUMMARY'},
+      {t:'comment',txt:''},
+      {t:'ok',    txt:'  ai_tutor_pyqs        1,492 questions (BM25 + semantic search)'},
+      {t:'ok',    txt:'  intelligence_bank    1,484 questions (Flashcards + Analytics)'},
+      {t:'ok',    txt:'  pyq_bank_subjects    21 subjects (8 core CS + 4 aptitude)'},
+      {t:'ok',    txt:'  years_covered        2000–2025 (26 years)'},
+      {t:'comment',txt:''},
+      {t:'am',    txt:'  RISING TOPICS: Graph Theory ▲  SQL ▲  OSI Model ▲'},
+      {t:'info',  txt:'  NAT questions: growing to ~34% of paper'},
+      {t:'ok',    txt:'  Difficulty: Easy 36.6% / Medium 40.7% / Hard 22.2%'},
+      {t:'comment',txt:''},
+      {t:'ok',    txt:'  $ open pyq           → Launch PYQ Bank'},
+      {t:'ok',    txt:'  $ open ai            → Launch AI Tutor'},
+      {t:'ok',    txt:'  $ open intelligence  → Launch Intelligence'},
+      {t:'ok',    txt:'  $ open trend         → Launch Trend Analysis'},
+    ]
+  },
+
+  dsa: function(){
+    return [
+      {t:'info',  txt:'● DSA BANK — W1–W35 SUMMARY'},
+      {t:'comment',txt:''},
+      {t:'ok',    txt:'  total_problems   260+ (LeetCode + GFG + Codeforces)'},
+      {t:'ok',    txt:'  current_week     W5 — Binary Search (9 probs)'},
+      {t:'ok',    txt:'  phase1_target    80 LC problems by W8'},
+      {t:'ok',    txt:'  phase2_target    152 LC problems by W16'},
+      {t:'ok',    txt:'  phase3_target    210 LC problems by W24'},
+      {t:'ok',    txt:'  phase4_target    253 LC problems by W32'},
+      {t:'comment',txt:''},
+      {t:'ok',    txt:'  Phase 1: Arrays · Two Pointers · Sliding Window · Stack · Binary Search · Linked Lists · Trees'},
+      {t:'ok',    txt:'  Phase 2: Heaps · Greedy · DP 1D/2D · Graphs BFS/DFS'},
+      {t:'ok',    txt:'  Phase 3: DP on Trees · Bit Manipulation · Advanced Graphs · Mock OAs'},
+      {t:'ok',    txt:'  Phase 4: LC Hard focus · Contests · Mock Interviews'},
+      {t:'comment',txt:''},
+      {t:'ok',    txt:'  $ open dsa  → Launch DSA Bank'},
+    ]
+  },
+
+  trend: function(){
+    return [
+      {t:'info',  txt:'● GATE CSE TREND ANALYSIS — 2010–2025'},
+      {t:'comment',txt:''},
+      {t:'ok',    txt:'  questions_analyzed   1,492'},
+      {t:'ok',    txt:'  topics_tracked       41'},
+      {t:'ok',    txt:'  subjects             16'},
+      {t:'comment',txt:''},
+      {t:'ok',    txt:'  #1 RISING   Graph Theory         ▲ positive slope'},
+      {t:'ok',    txt:'  #1 RISING   SQL / Databases      ▲ positive slope'},
+      {t:'am',    txt:'  #3 RISING   OSI Model / Networks ▲ growing'},
+      {t:'comment',txt:''},
+      {t:'ok',    txt:'  NAT questions:  34% of paper (was 22% in 2018)'},
+      {t:'info',  txt:'  Difficulty:     Easy 36.6% · Medium 40.7% · Hard 22.2%'},
+      {t:'comment',txt:''},
+      {t:'ok',    txt:'  $ open trend  → Full heatmap + trend charts'},
+    ]
+  },
+
+  neofetch: function(){
+    var now=new Date();
+    return [
+      {t:'raw', txt:
+       '<span style="color:#00ff41">        .--,       .--,</span>         <span style="color:#00ff41">tamz@gate-cse-2027</span>\n'+
+       '<span style="color:#00ff41">       ( (  \\.---./  ) )       </span>  <span style="color:#00d4ff">───────────────────</span>\n'+
+       '<span style="color:#00ff41">        \'.__/o   o\\.__\'        </span>  OS:        TAMZ Linux v2027\n'+
+       '<span style="color:#00ff41">          {= ^ =}               </span>  Kernel:    GATE CSE 5.1.35\n'+
+       '<span style="color:#00ff41">           >  -  <              </span>  Uptime:    Since May 2026\n'+
+       '<span style="color:#00ff41">          /  ---  \\             </span>  Phase:     1 of 5 (ACTIVE)\n'+
+       '<span style="color:#00ff41">         /  |   |  \\            </span>  Week:      W5 of W35\n'+
+       '<span style="color:#00ff41">        / ___| |___ \\           </span>  Subject:   Operating Systems\n'+
+       '<span style="color:#00ff41">       /.\'        \'.\\           </span>  DSA:       Binary Search\n'+
+       '                               Target:    IISc MTech CSE\n'+
+       '                               PYQs:      <span style="color:#00ff41">1,492</span> indexed\n'+
+       '                               Tools:     <span style="color:#00ff41">11</span> modules loaded\n'+
+       '                               Date:      '+now.toDateString()+'\n'+
+       '\n'+
+       '  <span style="background:#ff3333;color:#ff3333">   </span> <span style="background:#ffb000;color:#ffb000">   </span> <span style="background:#00ff41;color:#00ff41">   </span> <span style="background:#00d4ff;color:#00d4ff">   </span> <span style="background:#bf5fff;color:#bf5fff">   </span>'
+      }
+    ]
+  },
+
+  clear: function(){
+    document.getElementById('ltOutput').innerHTML='<div class="lo-line lo-comment">// terminal cleared</div>';
+    return null;
+  },
+
+  cd: function(args){
+    var map={roadmap:'#roadmap',pyq:'#pyq-section',exam:'#exam',dsa:'#dsa',subjects:'#subjects'};
+    var target=args?args.trim().toLowerCase():'';
+    if(map[target]){
+      var el=document.querySelector(map[target]);
+      if(el){el.scrollIntoView({behavior:'smooth',block:'start'});}
+      return [{t:'ok',txt:'cd: navigating to /'+target+'/'}];
+    }
+    return [{t:'info',txt:'Sections: roadmap · pyq · exam · dsa · subjects'},{t:'comment',txt:'Usage: cd <section>'}];
+  },
+};
+
+var cmdHistory=[];
+var histIdx=-1;
+var input=document.getElementById('ltInput');
+var output=document.getElementById('ltOutput');
+
+function addLine(cls,txt){
+  var d=document.createElement('div');
+  d.className='lo-line '+cls;
+  d.textContent=txt;
+  output.appendChild(d);
+}
+function addHTML(html){
+  var d=document.createElement('div');
+  d.className='lo-line';
+  d.innerHTML=html;
+  output.appendChild(d);
+}
+function scroll(){output.scrollTop=output.scrollHeight}
+
+function printPrompt(cmd){
+  addHTML('<span style="color:var(--green)">tamz</span><span style="color:var(--muted)">@gate</span><span style="color:var(--muted)">:~$</span> <span style="color:var(--green);font-weight:600">'+escHtml(cmd)+'</span>');
+}
+function escHtml(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+function runCommand(raw){
+  var trimmed=raw.trim();
+  if(!trimmed) return;
+  cmdHistory.unshift(trimmed);
+  histIdx=-1;
+  printPrompt(trimmed);
+  var parts=trimmed.split(/\s+/);
+  var cmd=parts[0].toLowerCase();
+  var args=parts.slice(1).join(' ');
+  var handler=COMMANDS[cmd];
+
+  if(cmd==='open'||cmd==='roadmap'){
+    var result=handler?handler(args):null;
+    if(result===null) return;
+    if(result){
+      result.forEach(function(r){ renderResult(r); });
+    }
+    scroll(); return;
+  }
+
+  if(!handler){
+    addLine('lo-err','bash: '+cmd+': command not found');
+    addLine('lo-comment','// type "help" for available commands');
+    scroll(); return;
+  }
+
+  var result=handler(args);
+  if(result===null) return;
+  if(result){
+    result.forEach(function(r){ renderResult(r); });
+  }
+  scroll();
+}
+
+function renderResult(r){
+  if(r.t==='info')  addLine('lo-info', r.txt);
+  else if(r.t==='ok')   addLine('lo-ok',  r.txt);
+  else if(r.t==='warn') addLine('lo-warn',r.txt);
+  else if(r.t==='err')  addLine('lo-err', r.txt);
+  else if(r.t==='am')   addLine('lo-warn',r.txt);
+  else if(r.t==='comment') addLine('lo-comment',r.txt);
+  else if(r.t==='raw')  addHTML('<div style="white-space:pre;font-size:11px;line-height:1.5">'+r.txt+'</div>');
+  else if(r.t==='table-row'){
+    addHTML(
+      '<div style="display:flex;gap:8px;font-size:11px;align-items:baseline;padding:1px 0">'
+      +'<span style="color:var(--green);min-width:120px">open '+escHtml(r.cmd)+'</span>'
+      +'<span style="color:var(--muted);flex:1">'+escHtml(r.desc)+'</span>'
+      +'<a href="'+r.url+'" target="_blank" style="color:var(--cyan);font-size:10px;white-space:nowrap;text-decoration:none">[ OPEN ↗ ]</a>'
+      +'</div>'
+    );
+  }
+}
+
+input.addEventListener('keydown',function(e){
+  if(e.key==='Enter'){
+    var val=input.value;
+    input.value='';
+    runCommand(val);
+  } else if(e.key==='ArrowUp'){
+    e.preventDefault();
+    if(histIdx<cmdHistory.length-1) histIdx++;
+    input.value=cmdHistory[histIdx]||'';
+  } else if(e.key==='ArrowDown'){
+    e.preventDefault();
+    if(histIdx>0) histIdx--;
+    else{histIdx=-1;input.value='';return;}
+    input.value=cmdHistory[histIdx]||'';
+  } else if(e.key==='Tab'){
+    e.preventDefault();
+    var val=input.value.trim();
+    var allCmds=['help','ls','status','neofetch','clear','open roadmap','open os','open dbms','open cn','open notes','open dsa','open ai','open intelligence','open pyq','open trend','open cbt','open subjectcbt','open hub','open resources','roadmap','roadmap ai','pyq','dsa','trend','cd roadmap','cd dsa','cd subjects'];
+    var matches=allCmds.filter(function(c){return c.startsWith(val)});
+    if(matches.length===1) input.value=matches[0];
+    else if(matches.length>1){
+      printPrompt(val);
+      addLine('lo-comment',matches.join('  '));
+      scroll();
+    }
+  }
+});
+
+// Focus terminal on click anywhere
+document.addEventListener('click',function(e){
+  if(!e.target.closest('a')&&!e.target.closest('.tool-card')&&!e.target.closest('.phase-row')&&!e.target.closest('.subj-item')){
+    input.focus();
+  }
+});
+
+// keyboard shortcut
+document.addEventListener('keydown',function(e){
+  if((e.ctrlKey||e.metaKey)&&e.key==='k'){
+    e.preventDefault();
+    input.focus();
+    input.scrollIntoView({behavior:'smooth',block:'center'});
+  }
+});
+</script>
+</body>
+</html>
