@@ -281,6 +281,10 @@ footer{border-top:1px solid var(--border)}
 .cd-bar.amb-on .cd-track-fill{box-shadow:0 0 8px rgba(30,128,128,.5);transition:box-shadow .6s ease}
 body.amb-on{--accent:var(--teal);--accent2:var(--teal);--accent-dim:var(--teal-bg)}
 </style>
+<script>/* TAMZ auto-restore */
+(function(){var t=localStorage.getItem('tamz-theme');if(t==='hacker'){window.location.replace('hacker.html');}})();
+</script>
+
 </head>
 <body>
 
@@ -1249,5 +1253,60 @@ document.getElementById('burgerBtn').onclick=openSB;
   });
 })();
 </script>
+
+<!-- ╔══════════════════════════════════════════════════╗ -->
+<!-- ║   TAMZ THEME SWITCHER — executive theme          ║ -->
+<!-- ╚══════════════════════════════════════════════════╝ -->
+<style>
+#tamz-sw{position:fixed;bottom:22px;right:22px;z-index:9000;display:flex;flex-direction:column;align-items:flex-end;gap:6px;font-family:'Syne',system-ui,sans-serif}
+#tamz-sw-menu{display:none;flex-direction:column;gap:4px;background:var(--surface,#141210);border:1px solid var(--border,#28241e);border-radius:10px;padding:10px;min-width:180px;box-shadow:0 16px 48px rgba(0,0,0,.45)}
+#tamz-sw-menu.open{display:flex}
+#tamz-sw-btn{width:40px;height:40px;background:var(--surface,#141210);border:1px solid var(--border,#28241e);color:var(--accent,#d49040);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;border-radius:8px;transition:all .17s;box-shadow:0 4px 14px rgba(0,0,0,.22)}
+#tamz-sw-btn:hover{border-color:var(--accent,#d49040);background:var(--accent-dim,rgba(212,144,64,.08))}
+.tsw-lbl{font-size:8.5px;color:var(--faint,#4a4438);letter-spacing:.15em;text-transform:uppercase;font-weight:800;padding:0 6px;margin-bottom:3px}
+.tsw-b{display:flex;align-items:center;gap:9px;padding:9px 12px;border:1px solid var(--border,#28241e);background:transparent;color:var(--ink2,#bfb8aa);font-family:'Syne',system-ui,sans-serif;font-size:11px;font-weight:600;cursor:pointer;border-radius:7px;transition:all .13s;text-align:left;text-decoration:none;width:100%}
+.tsw-b:hover,.tsw-b:focus{border-color:var(--accent,#d49040);color:var(--accent,#d49040);background:var(--accent-dim,rgba(212,144,64,.08));outline:none}
+.tsw-b.active{border-color:var(--accent,#d49040);color:var(--accent,#d49040);background:var(--accent-dim,rgba(212,144,64,.08));cursor:default}
+.tsw-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.tsw-dot.g{background:#00ff41;box-shadow:0 0 4px #00ff41}
+.tsw-dot.a{background:var(--accent,#d49040)}
+.tsw-sep{height:1px;background:var(--border,#28241e);margin:3px 0}
+</style>
+<div id="tamz-sw">
+  <div id="tamz-sw-menu" role="menu" aria-label="Switch TAMZ theme">
+    <div class="tsw-lbl">Interface</div>
+    <button class="tsw-b active" aria-current="true" disabled>
+      <span class="tsw-dot a"></span>Executive Mode
+    </button>
+    <button class="tsw-b" onclick="tswGo('hacker')" role="menuitem">
+      <span class="tsw-dot g"></span>Terminal Mode
+    </button>
+    <div class="tsw-sep"></div>
+    <a class="tsw-b" href="index.html?choose" role="menuitem" onclick="tswClear()">
+      ← Choose again
+    </a>
+  </div>
+  <button id="tamz-sw-btn" onclick="tswToggle()" title="Switch theme  Alt+T" aria-label="Open theme switcher">⊞</button>
+</div>
+<script>
+(function(){
+  function tswToggle(){document.getElementById('tamz-sw-menu').classList.toggle('open')}
+  function tswGo(theme){
+    localStorage.setItem('tamz-theme',theme);
+    window.location.replace(theme==='hacker'?'hacker.html':'executive.html');
+  }
+  function tswClear(){ /* index.html?choose bypasses auto-redirect — no need to wipe storage */ }
+  window.tswToggle=tswToggle; window.tswGo=tswGo; window.tswClear=tswClear;
+  document.addEventListener('keydown',function(e){
+    if(e.altKey&&e.key.toLowerCase()==='t'){e.preventDefault();tswToggle();}
+  });
+  document.addEventListener('click',function(e){
+    if(!e.target.closest('#tamz-sw')){
+      document.getElementById('tamz-sw-menu').classList.remove('open');
+    }
+  });
+})();
+</script>
+
 </body>
 </html>

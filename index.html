@@ -452,14 +452,19 @@ html,body{
 
 // ─── Restore saved preference ────────────────────────────────
 (function(){
-  var saved=localStorage.getItem('tamz-theme');
-  if(saved==='hacker'||saved==='executive'){
-    // Auto-redirect
-    var file=saved==='hacker'?'hacker.html':'executive.html';
-    window.location.href=file;
+  // If the URL contains ?choose, the user deliberately came back — show the chooser
+  if(window.location.search.indexOf('choose')!==-1) {
+    var note=document.getElementById('savedNote');
+    var saved=localStorage.getItem('tamz-theme');
+    note.textContent = saved ? '// Switching from '+saved+' — pick a new experience below' : '// No preference set — choose below to continue';
     return;
   }
-  // show note if preference was cleared
+  var saved=localStorage.getItem('tamz-theme');
+  if(saved==='hacker'||saved==='executive'){
+    // Auto-redirect first-time / tab-restored visits
+    window.location.replace(saved==='hacker'?'hacker.html':'executive.html');
+    return;
+  }
   var note=document.getElementById('savedNote');
   note.textContent='// No preference set — choose below to continue';
 })();
@@ -474,7 +479,7 @@ function selectTheme(theme){
   cover.classList.add('active');
 
   setTimeout(function(){
-    window.location.href=theme==='hacker'?'hacker.html':'executive.html';
+    window.location.replace(theme==='hacker'?'hacker.html':'executive.html');
   },350);
 }
 
