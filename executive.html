@@ -1281,6 +1281,9 @@ document.getElementById('burgerBtn').onclick=openSB;
     <button class="tsw-b" onclick="tswGo('hacker')" role="menuitem">
       <span class="tsw-dot g"></span>Terminal Mode
     </button>
+    
+    <button class="tsw-b" onclick="tswGo('nasa')"><span class="tsw-dot" style="background:#00e676"></span>MISSION CTRL</button>
+    <button class="tsw-b" onclick="tswGo('smartcity')"><span class="tsw-dot" style="background:#00e5ff"></span>SMART CITY</button>
     <div class="tsw-sep"></div>
     <a class="tsw-b" href="index.html?choose" role="menuitem" onclick="tswClear()">
       ← Choose again
@@ -1291,9 +1294,10 @@ document.getElementById('burgerBtn').onclick=openSB;
 <script>
 (function(){
   function tswToggle(){document.getElementById('tamz-sw-menu').classList.toggle('open')}
-  function tswGo(theme){
-    localStorage.setItem('tamz-theme',theme);
-    window.location.replace(theme==='hacker'?'hacker.html':'executive.html');
+  function tswGo(t){
+    localStorage.setItem('tamz-theme',t);
+    var m={'hacker':'hacker.html','executive':'executive.html','netflix':'netflix_redesign.html','cyberpunk':'cyberpunk.html','apple':'apple.html','nasa':'nasa.html','smartcity':'gate-smartcity.html'};
+    window.location.replace(m[t]||'index.html');
   }
   function tswClear(){ /* index.html?choose bypasses auto-redirect — no need to wipe storage */ }
   window.tswToggle=tswToggle; window.tswGo=tswGo; window.tswClear=tswClear;
@@ -1309,4 +1313,4 @@ document.getElementById('burgerBtn').onclick=openSB;
 </script>
 
 </body>
-</html>
+  </html>
