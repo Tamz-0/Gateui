@@ -6,7 +6,7 @@
 <title>TAMZ — GATE CSE 2027</title>
 <meta name="description" content="TAMZ: One platform, two visual experiences for GATE CSE 2027 prep.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@400;700;800&family=Bebas+Neue&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
@@ -25,6 +25,10 @@
   --gold-dim:rgba(200,149,74,0.1);
   --gold-border:rgba(200,149,74,0.22);
   --cyan:#00d4ff;
+  --netflix:#E50914;
+  --netflix-dim:rgba(229,9,20,0.09);
+  --netflix-border:rgba(229,9,20,0.22);
+  --netflix-display:'Bebas Neue',sans-serif;
 }
 
 html,body{
@@ -113,10 +117,10 @@ html,body{
 /* ─── CARDS ROW ─── */
 .cards{
   display:grid;
-  grid-template-columns:1fr 1fr;
+  grid-template-columns:1fr 1fr 1fr;
   gap:18px;
   width:100%;
-  max-width:760px;
+  max-width:1100px;
   opacity:0;animation:fadeIn .6s ease 1.5s forwards;
 }
 
@@ -168,7 +172,48 @@ html,body{
   background:linear-gradient(90deg,var(--gold),transparent);
 }
 
-/* Card inner content */
+/* Card: Netflix */
+.card-netflix{
+  background:#090303;
+  border-color:var(--netflix-border);
+  color:#fff;
+}
+.card-netflix:hover{
+  border-color:var(--netflix);
+  box-shadow:0 0 28px rgba(229,9,20,0.16), 0 12px 36px rgba(0,0,0,.5);
+}
+.card-netflix .c-accent-bar{
+  position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--netflix),transparent);
+}
+.card-netflix .c-badge{
+  color:var(--netflix);border:1px solid rgba(229,9,20,0.32);
+  background:rgba(229,9,20,0.08);font-family:var(--sans);
+  font-size:9px;font-weight:800;letter-spacing:.14em;
+}
+.card-netflix .c-name{
+  font-family:var(--netflix-display);
+  font-weight:400;
+  color:#fff;
+  font-size:clamp(24px,3.4vw,38px);
+  letter-spacing:.04em;
+  line-height:.9;
+  text-shadow:0 2px 20px rgba(229,9,20,0.3);
+}
+.card-netflix .c-tagline{color:rgba(255,255,255,0.38);font-family:var(--sans)}
+.card-netflix .c-features span{
+  color:rgba(255,255,255,0.45);font-family:var(--sans);
+}
+.card-netflix .c-features span::before{content:'▶ ';color:rgba(229,9,20,0.5)}
+.card-netflix .c-btn{
+  border-color:rgba(229,9,20,0.3);color:var(--netflix);font-family:var(--sans);
+}
+.card-netflix:hover .c-btn{
+  background:rgba(229,9,20,0.08);border-color:var(--netflix);
+}
+.card-netflix .c-preview{border-color:rgba(229,9,20,0.22);background:#090303}
+.card-netflix .prev-line{background:var(--netflix)}
+.card-netflix .prev-dot{background:rgba(229,9,20,0.6)}
 .c-badge{
   font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
   padding:3px 9px;border-radius:2px;
@@ -328,6 +373,9 @@ html,body{
 #transition-cover.active{opacity:1;pointer-events:all}
 
 /* ─── RESPONSIVE ─── */
+@media(max-width:900px){
+  .cards{grid-template-columns:1fr 1fr;max-width:600px}
+}
 @media(max-width:600px){
   .cards{grid-template-columns:1fr;max-width:400px}
   .c-preview{display:none}
@@ -357,7 +405,7 @@ html,body{
   </div>
 
   <div class="prompt-line">
-    <span class="g">tamz</span>@gate-cse-2027:~$ <span class="g">choose</span> <span class="c">--theme</span> <span>[executive|hacker]</span>
+    <span class="g">tamz</span>@gate-cse-2027:~$ <span class="g">choose</span> <span class="c">--theme</span> <span>[executive|hacker|netflix]</span>
   </div>
 
   <div class="choose-title">Choose Your Experience</div>
@@ -420,6 +468,33 @@ html,body{
       </button>
     </div>
 
+    <!-- NETFLIX CARD -->
+    <div class="theme-card card-netflix" id="cardNetflix" onclick="selectTheme('netflix')" role="button" tabindex="0" aria-label="Choose Netflix cinematic mode">
+      <div class="c-accent-bar"></div>
+      <div class="c-preview">
+        <div class="prev-line" style="width:75%"></div>
+        <div class="prev-line thin" style="width:50%"></div>
+        <div class="prev-line thin" style="width:65%"></div>
+        <div class="prev-dot-row">
+          <div class="prev-dot"></div>
+          <div class="prev-dot" style="width:14px;border-radius:1px"></div>
+        </div>
+      </div>
+      <span class="c-badge">TAMZ Netflix</span>
+      <div class="c-name">CINEMATIC<br>MODE</div>
+      <div class="c-tagline">Bold editorial layout. Bebas display type, deep red accents, hero sections, and cinematic scroll effects.</div>
+      <div class="c-features">
+        <span>Netflix-style hero layout</span>
+        <span>Bebas Neue display type</span>
+        <span>Cinematic scroll animations</span>
+        <span>Deep red + black palette</span>
+      </div>
+      <button class="c-btn">
+        <span>ENTER CINEMA</span>
+        <span>&#9654;</span>
+      </button>
+    </div>
+
   </div>
 
   <div class="or-divider">// preference is saved · switch anytime from within either theme</div>
@@ -459,19 +534,21 @@ html,body{
     note.textContent = saved ? '// Switching from '+saved+' — pick a new experience below' : '// No preference set — choose below to continue';
     return;
   }
+  var saved2=localStorage.getItem('tamz-theme');
+  var note2=document.getElementById('savedNote');
+  if(!note2) return;
+  note2.textContent=saved2?'// Last session: '+saved2+' — choose to continue or switch':'// No preference set — choose below to continue';
   var saved=localStorage.getItem('tamz-theme');
-  if(saved==='hacker'||saved==='executive'){
+  if(saved==='hacker'||saved==='executive'||saved==='netflix'){
     // Auto-redirect first-time / tab-restored visits
-    window.location.replace(saved==='hacker'?'hacker.html':'executive.html');
+    window.location.replace(saved==='hacker'?'hacker.html':saved==='executive'?'executive.html':'netflix_redesign.html');
     return;
   }
-  var note=document.getElementById('savedNote');
-  note.textContent='// No preference set — choose below to continue';
 })();
 
 // ─── Theme selection ─────────────────────────────────────────
 function selectTheme(theme){
-  var card=document.getElementById(theme==='hacker'?'cardHacker':'cardExec');
+  var card=document.getElementById(theme==='hacker'?'cardHacker':theme==='executive'?'cardExec':'cardNetflix');
   card.classList.add('selected');
   localStorage.setItem('tamz-theme',theme);
 
@@ -479,7 +556,7 @@ function selectTheme(theme){
   cover.classList.add('active');
 
   setTimeout(function(){
-    window.location.replace(theme==='hacker'?'hacker.html':'executive.html');
+    window.location.replace(theme==='hacker'?'hacker.html':theme==='executive'?'executive.html':'netflix_redesign.html');
   },350);
 }
 
