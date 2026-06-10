@@ -449,6 +449,57 @@ html,body{
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
 /* ─── SELECTED FLASH ─── */
+
+/* Card: NASA Mission Control */
+.card-nasa{
+  background:#030c1a;
+  border-color:rgba(0,184,212,0.18);
+  color:#e0f0ff;
+}
+.card-nasa:hover{
+  border-color:rgba(0,184,212,0.55);
+  box-shadow:0 0 24px rgba(0,184,212,0.14), 0 12px 36px rgba(0,0,0,.5);
+}
+.card-nasa .c-accent-bar{
+  position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,#00e676,#00b8d4,transparent);
+}
+.card-nasa .c-badge{color:#00e676;border:1px solid rgba(0,230,118,0.3);background:rgba(0,230,118,0.06);font-family:'Share Tech Mono',monospace;}
+.card-nasa .c-name{font-family:'Share Tech Mono',monospace;color:#00b8d4;text-shadow:0 0 18px rgba(0,184,212,0.35)}
+.card-nasa .c-tagline{color:rgba(176,190,197,0.6);font-family:monospace;font-size:11px}
+.card-nasa .c-features span{color:rgba(120,144,156,0.8)}
+.card-nasa .c-features span::before{content:'◀ ';color:rgba(0,230,118,0.6)}
+.card-nasa .c-btn{border-color:rgba(0,184,212,0.28);color:#00b8d4;font-family:monospace}
+.card-nasa:hover .c-btn{background:rgba(0,184,212,0.08);border-color:#00b8d4}
+.card-nasa .c-preview{border-color:rgba(0,184,212,0.18);background:#061529}
+.card-nasa .prev-line{background:#00e676}
+.card-nasa .prev-dot{background:rgba(0,184,212,0.6)}
+
+/* Card: Smart City */
+.card-smartcity{
+  background:#050608;
+  border-color:rgba(0,229,255,0.16);
+  color:#e2e8f0;
+}
+.card-smartcity:hover{
+  border-color:rgba(0,229,255,0.5);
+  box-shadow:0 0 24px rgba(0,229,255,0.12), 0 12px 36px rgba(0,0,0,.5);
+}
+.card-smartcity .c-accent-bar{
+  position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,#00e5ff,#b388ff,transparent);
+}
+.card-smartcity .c-badge{color:#00e5ff;border:1px solid rgba(0,229,255,0.28);background:rgba(0,229,255,0.06);font-family:'Space Mono',monospace;}
+.card-smartcity .c-name{font-family:'Orbitron',sans-serif;color:#00e5ff;text-shadow:0 0 18px rgba(0,229,255,0.3)}
+.card-smartcity .c-tagline{color:rgba(148,163,184,0.6);font-size:11px}
+.card-smartcity .c-features span{color:rgba(100,120,140,0.85)}
+.card-smartcity .c-features span::before{content:'◈ ';color:rgba(0,229,255,0.5)}
+.card-smartcity .c-btn{border-color:rgba(0,229,255,0.25);color:#00e5ff;font-family:'Space Mono',monospace}
+.card-smartcity:hover .c-btn{background:rgba(0,229,255,0.07);border-color:#00e5ff}
+.card-smartcity .c-preview{border-color:rgba(0,229,255,0.15);background:#080b10}
+.card-smartcity .prev-line{background:#00e5ff}
+.card-smartcity .prev-dot{background:rgba(179,136,255,0.6)}
+
 .theme-card.selected{
   animation:selectFlash .35s ease forwards;
 }
@@ -647,6 +698,61 @@ html,body{
       </button>
     </div>
 
+
+    <!-- NASA MISSION CONTROL CARD -->
+    <div class="theme-card card-nasa" id="cardNasa" onclick="selectTheme('nasa')" role="button" tabindex="0" aria-label="Choose NASA Mission Control mode">
+      <div class="c-accent-bar"></div>
+      <div class="c-preview">
+        <div class="prev-line" style="width:80%"></div>
+        <div class="prev-line thin" style="width:52%"></div>
+        <div class="prev-line thin" style="width:65%"></div>
+        <div class="prev-dot-row">
+          <div class="prev-dot"></div>
+          <div class="prev-dot" style="width:18px"></div>
+        </div>
+      </div>
+      <span class="c-badge">TAMZ Mission Ctrl</span>
+      <div class="c-name">MISSION<br>CONTROL</div>
+      <div class="c-tagline">NASA ground systems UI. Monospace telemetry. Scanlines, grid overlay, boot sequence. CRT-green on deep navy.</div>
+      <div class="c-features">
+        <span>Boot sequence + scanlines</span>
+        <span>Telemetry / countdown strip</span>
+        <span>Share Tech Mono + VT323</span>
+        <span>Status grid + ticker feed</span>
+      </div>
+      <button class="c-btn">
+        <span>OPEN</span>
+        <span>&#8599;</span>
+      </button>
+    </div>
+
+    <!-- SMART CITY CARD -->
+    <div class="theme-card card-smartcity" id="cardSmartcity" onclick="selectTheme('smartcity')" role="button" tabindex="0" aria-label="Choose Smart City map mode">
+      <div class="c-accent-bar"></div>
+      <div class="c-preview">
+        <div class="prev-line" style="width:70%"></div>
+        <div class="prev-line thin" style="width:45%"></div>
+        <div class="prev-line thin" style="width:60%"></div>
+        <div class="prev-dot-row">
+          <div class="prev-dot"></div>
+          <div class="prev-dot" style="width:22px;border-radius:4px"></div>
+        </div>
+      </div>
+      <span class="c-badge">TAMZ Nexus</span>
+      <div class="c-name">SMART<br>CITY</div>
+      <div class="c-tagline">Interactive SVG city map. Each building is a GATE topic. Drag to pan, scroll to zoom. Orbitron type, particle canvas.</div>
+      <div class="c-features">
+        <span>Pannable SVG city map</span>
+        <span>Building panels + AI guide</span>
+        <span>Orbitron + Space Mono</span>
+        <span>Particle canvas + command palette</span>
+      </div>
+      <button class="c-btn">
+        <span>OPEN</span>
+        <span>&#8599;</span>
+      </button>
+    </div>
+
   </div>
 
   <div class="or-divider">// preference is saved · switch anytime from within either theme</div>
@@ -691,8 +797,8 @@ html,body{
   if(!note2) return;
   note2.textContent=saved2?'// Last session: '+saved2+' — choose to continue or switch':'// No preference set — choose below to continue';
   var saved=localStorage.getItem('tamz-theme');
-  if(saved==='hacker'||saved==='executive'||saved==='netflix'||saved==='cyberpunk'||saved==='apple'){
-    var themeMap={hacker:'hacker.html',executive:'executive.html',netflix:'netflix_redesign.html',cyberpunk:'cyberpunk.html',apple:'apple.html'};
+  if(saved==='hacker'||saved==='executive'||saved==='netflix'||saved==='cyberpunk'||saved==='apple'||saved==='nasa'||saved==='smartcity'){
+    var themeMap={hacker:'hacker.html',executive:'executive.html',netflix:'netflix_redesign.html',cyberpunk:'cyberpunk.html',apple:'apple.html',nasa:'nasa.html',smartcity:'gate-smartcity.html'};
     window.location.replace(themeMap[saved]);
     return;
   }
@@ -700,7 +806,7 @@ html,body{
 
 // ─── Theme selection ─────────────────────────────────────────
 function selectTheme(theme){
-  var idMap={hacker:'cardHacker',executive:'cardExec',netflix:'cardNetflix',cyberpunk:'cardCyberpunk',apple:'cardApple'};
+  var idMap={hacker:'cardHacker',executive:'cardExec',netflix:'cardNetflix',cyberpunk:'cardCyberpunk',apple:'cardApple',nasa:'cardNasa',smartcity:'cardSmartcity'};
   var card=document.getElementById(idMap[theme]);
   if(card) card.classList.add('selected');
   localStorage.setItem('tamz-theme',theme);
@@ -708,7 +814,7 @@ function selectTheme(theme){
   var cover=document.getElementById('transition-cover');
   cover.classList.add('active');
 
-  var themeMap={hacker:'hacker.html',executive:'executive.html',netflix:'netflix_redesign.html',cyberpunk:'cyberpunk.html',apple:'apple.html'};
+  var themeMap={hacker:'hacker.html',executive:'executive.html',netflix:'netflix_redesign.html',cyberpunk:'cyberpunk.html',apple:'apple.html',nasa:'nasa.html',smartcity:'gate-smartcity.html'};
   setTimeout(function(){
     window.location.replace(themeMap[theme]||'index.html');
   },350);
