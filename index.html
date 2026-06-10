@@ -6,7 +6,7 @@
 <title>TAMZ — GATE CSE 2027</title>
 <meta name="description" content="TAMZ: One platform, two visual experiences for GATE CSE 2027 prep.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@400;700;800&family=Bebas+Neue&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@400;700;800&family=Bebas+Neue&family=Orbitron:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
@@ -35,6 +35,9 @@
   --cp-dim:rgba(255,0,170,0.08);
   --cp-border:rgba(255,0,170,0.22);
   --cp-display:'Orbitron',sans-serif;
+  --apple-accent:#0071e3;
+  --apple-dim:rgba(0,113,227,0.09);
+  --apple-border:rgba(0,113,227,0.2);
 }
 
 html,body{
@@ -123,10 +126,10 @@ html,body{
 /* ─── CARDS ROW ─── */
 .cards{
   display:grid;
-  grid-template-columns:1fr 1fr 1fr 1fr;
-  gap:14px;
+  grid-template-columns:repeat(5,1fr);
+  gap:12px;
   width:100%;
-  max-width:1440px;
+  max-width:1600px;
   opacity:0;animation:fadeIn .6s ease 1.5s forwards;
 }
 
@@ -365,6 +368,50 @@ html,body{
 .card-cyberpunk .prev-line.thin:last-of-type{background:var(--cp-cyan);opacity:.5}
 .card-cyberpunk .prev-dot{background:rgba(255,0,170,0.6)}
 
+/* Card: Apple */
+.card-apple{
+  background:#ffffff;
+  border-color:rgba(0,0,0,.1);
+  color:#1d1d1f;
+  box-shadow:0 2px 12px rgba(0,0,0,.07);
+}
+.card-apple:hover{
+  border-color:rgba(0,113,227,.25);
+  box-shadow:0 8px 32px rgba(0,0,0,.12),0 2px 8px rgba(0,113,227,.08);
+}
+.card-apple .c-accent-bar{
+  position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--apple-accent),#5ac8fa,transparent);
+  border-radius:12px 12px 0 0;
+}
+.card-apple .c-badge{
+  color:var(--apple-accent);border:1px solid var(--apple-border);
+  background:var(--apple-dim);
+  font-family:'Inter',var(--sans);
+  font-size:10px;font-weight:600;letter-spacing:.02em;
+  border-radius:20px;padding:4px 12px;
+}
+.card-apple .c-name{
+  font-family:'Inter',var(--sans);
+  font-weight:700;
+  color:#1d1d1f;
+  font-size:clamp(18px,2.4vw,26px);
+  letter-spacing:-.03em;
+  line-height:1.1;
+}
+.card-apple .c-tagline{color:rgba(29,29,31,0.5);font-family:'Inter',var(--sans);font-size:12px}
+.card-apple .c-features span{color:rgba(29,29,31,0.55);font-family:'Inter',var(--sans)}
+.card-apple .c-features span::before{content:'· ';color:var(--apple-accent)}
+.card-apple .c-btn{
+  border-color:rgba(0,113,227,.25);color:var(--apple-accent);
+  font-family:'Inter',var(--sans);font-weight:600;
+  border-radius:980px;background:var(--apple-dim);
+}
+.card-apple:hover .c-btn{background:rgba(0,113,227,.14);border-color:var(--apple-accent)}
+.card-apple .c-preview{border-color:rgba(0,0,0,.08);background:#f5f5f7}
+.card-apple .prev-line{background:var(--apple-accent);opacity:.5;border-radius:2px}
+.card-apple .prev-dot{background:rgba(0,113,227,.4);border-radius:50%}
+
 /* ─── DIVIDER ─── */
 .or-divider{
   display:flex;align-items:center;gap:12px;
@@ -456,7 +503,7 @@ html,body{
   </div>
 
   <div class="prompt-line">
-    <span class="g">tamz</span>@gate-cse-2027:~$ <span class="g">choose</span> <span class="c">--theme</span> <span>[executive|hacker|netflix|cyberpunk]</span>
+    <span class="g">tamz</span>@gate-cse-2027:~$ <span class="g">choose</span> <span class="c">--theme</span> <span>[executive|hacker|netflix|cyberpunk|apple]</span>
   </div>
 
   <div class="choose-title">Choose Your Experience</div>
@@ -573,6 +620,33 @@ html,body{
       </button>
     </div>
 
+    <!-- APPLE CARD -->
+    <div class="theme-card card-apple" id="cardApple" onclick="selectTheme('apple')" role="button" tabindex="0" aria-label="Choose Apple WWDC mode">
+      <div class="c-accent-bar"></div>
+      <div class="c-preview">
+        <div class="prev-line" style="width:72%;border-radius:3px"></div>
+        <div class="prev-line thin" style="width:48%;border-radius:3px"></div>
+        <div class="prev-line thin" style="width:60%;border-radius:3px"></div>
+        <div class="prev-dot-row">
+          <div class="prev-dot" style="border-radius:50%"></div>
+          <div class="prev-dot" style="width:20px;border-radius:10px"></div>
+        </div>
+      </div>
+      <span class="c-badge">TAMZ Apple</span>
+      <div class="c-name">WWDC<br>MODE</div>
+      <div class="c-tagline">Frosted glass surfaces. Inter typeface. Light/dark adaptive. Rounded cards, subtle depth — premium silence.</div>
+      <div class="c-features">
+        <span>Frosted glass nav + switcher</span>
+        <span>Light &amp; dark adaptive</span>
+        <span>Inter — SF Pro proxy</span>
+        <span>Scroll reveal animations</span>
+      </div>
+      <button class="c-btn">
+        <span>OPEN</span>
+        <span>&#8599;</span>
+      </button>
+    </div>
+
   </div>
 
   <div class="or-divider">// preference is saved · switch anytime from within either theme</div>
@@ -617,8 +691,8 @@ html,body{
   if(!note2) return;
   note2.textContent=saved2?'// Last session: '+saved2+' — choose to continue or switch':'// No preference set — choose below to continue';
   var saved=localStorage.getItem('tamz-theme');
-  if(saved==='hacker'||saved==='executive'||saved==='netflix'||saved==='cyberpunk'){
-    var themeMap={hacker:'hacker.html',executive:'executive.html',netflix:'netflix_redesign.html',cyberpunk:'cyberpunk.html'};
+  if(saved==='hacker'||saved==='executive'||saved==='netflix'||saved==='cyberpunk'||saved==='apple'){
+    var themeMap={hacker:'hacker.html',executive:'executive.html',netflix:'netflix_redesign.html',cyberpunk:'cyberpunk.html',apple:'apple.html'};
     window.location.replace(themeMap[saved]);
     return;
   }
@@ -626,7 +700,7 @@ html,body{
 
 // ─── Theme selection ─────────────────────────────────────────
 function selectTheme(theme){
-  var idMap={hacker:'cardHacker',executive:'cardExec',netflix:'cardNetflix',cyberpunk:'cardCyberpunk'};
+  var idMap={hacker:'cardHacker',executive:'cardExec',netflix:'cardNetflix',cyberpunk:'cardCyberpunk',apple:'cardApple'};
   var card=document.getElementById(idMap[theme]);
   if(card) card.classList.add('selected');
   localStorage.setItem('tamz-theme',theme);
@@ -634,7 +708,7 @@ function selectTheme(theme){
   var cover=document.getElementById('transition-cover');
   cover.classList.add('active');
 
-  var themeMap={hacker:'hacker.html',executive:'executive.html',netflix:'netflix_redesign.html',cyberpunk:'cyberpunk.html'};
+  var themeMap={hacker:'hacker.html',executive:'executive.html',netflix:'netflix_redesign.html',cyberpunk:'cyberpunk.html',apple:'apple.html'};
   setTimeout(function(){
     window.location.replace(themeMap[theme]||'index.html');
   },350);
@@ -652,4 +726,3 @@ document.querySelectorAll('.theme-card').forEach(function(card){
 </script>
 </body>
 </html>
-
