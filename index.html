@@ -6,7 +6,7 @@
 <title>TAMZ — GATE CSE 2027</title>
 <meta name="description" content="TAMZ: One platform, two visual experiences for GATE CSE 2027 prep.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@400;700;800&family=Bebas+Neue&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@400;700;800&family=Bebas+Neue&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
@@ -29,6 +29,12 @@
   --netflix-dim:rgba(229,9,20,0.09);
   --netflix-border:rgba(229,9,20,0.22);
   --netflix-display:'Bebas Neue',sans-serif;
+  --cp-mag:#ff00aa;
+  --cp-yel:#f5e642;
+  --cp-cyan:#00f5ff;
+  --cp-dim:rgba(255,0,170,0.08);
+  --cp-border:rgba(255,0,170,0.22);
+  --cp-display:'Orbitron',sans-serif;
 }
 
 html,body{
@@ -117,10 +123,10 @@ html,body{
 /* ─── CARDS ROW ─── */
 .cards{
   display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:18px;
+  grid-template-columns:1fr 1fr 1fr 1fr;
+  gap:14px;
   width:100%;
-  max-width:1100px;
+  max-width:1440px;
   opacity:0;animation:fadeIn .6s ease 1.5s forwards;
 }
 
@@ -317,6 +323,48 @@ html,body{
 .card-hacker .prev-dot{background:rgba(0,255,65,0.6)}
 .card-exec .prev-dot{background:rgba(200,149,74,0.5)}
 
+/* Card: Cyberpunk */
+.card-cyberpunk{
+  background:#05020d;
+  border-color:var(--cp-border);
+  color:#f0e8ff;
+}
+.card-cyberpunk:hover{
+  border-color:var(--cp-mag);
+  box-shadow:0 0 28px rgba(255,0,170,0.18), 0 12px 36px rgba(0,0,0,.6);
+}
+.card-cyberpunk .c-accent-bar{
+  position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--cp-mag),var(--cp-yel),var(--cp-cyan),transparent);
+}
+.card-cyberpunk .c-badge{
+  color:var(--cp-mag);border:1px solid rgba(255,0,170,0.32);
+  background:rgba(255,0,170,0.08);font-family:var(--mono);
+  font-size:9px;font-weight:400;letter-spacing:.14em;
+}
+.card-cyberpunk .c-name{
+  font-family:'Orbitron',var(--sans);
+  font-weight:900;
+  color:#f0e8ff;
+  font-size:clamp(13px,1.8vw,20px);
+  letter-spacing:.04em;
+  line-height:1.15;
+  text-shadow:0 0 20px rgba(255,0,170,0.35),0 0 40px rgba(255,0,170,0.15);
+}
+.card-cyberpunk .c-tagline{color:rgba(240,232,255,0.38);font-family:var(--mono)}
+.card-cyberpunk .c-features span{color:rgba(240,232,255,0.45);font-family:var(--mono)}
+.card-cyberpunk .c-features span::before{content:'> ';color:rgba(255,0,170,0.5)}
+.card-cyberpunk .c-btn{
+  border-color:rgba(255,0,170,0.3);color:var(--cp-mag);font-family:var(--mono);
+  clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%);
+}
+.card-cyberpunk:hover .c-btn{background:rgba(255,0,170,0.08);border-color:var(--cp-mag)}
+.card-cyberpunk .c-preview{border-color:rgba(255,0,170,0.22);background:#05020d}
+.card-cyberpunk .prev-line{background:var(--cp-mag)}
+.card-cyberpunk .prev-line.thin:first-of-type{background:var(--cp-yel);opacity:.6}
+.card-cyberpunk .prev-line.thin:last-of-type{background:var(--cp-cyan);opacity:.5}
+.card-cyberpunk .prev-dot{background:rgba(255,0,170,0.6)}
+
 /* ─── DIVIDER ─── */
 .or-divider{
   display:flex;align-items:center;gap:12px;
@@ -373,6 +421,9 @@ html,body{
 #transition-cover.active{opacity:1;pointer-events:all}
 
 /* ─── RESPONSIVE ─── */
+@media(max-width:1200px){
+  .cards{grid-template-columns:1fr 1fr;max-width:760px}
+}
 @media(max-width:900px){
   .cards{grid-template-columns:1fr 1fr;max-width:600px}
 }
@@ -405,7 +456,7 @@ html,body{
   </div>
 
   <div class="prompt-line">
-    <span class="g">tamz</span>@gate-cse-2027:~$ <span class="g">choose</span> <span class="c">--theme</span> <span>[executive|hacker|netflix]</span>
+    <span class="g">tamz</span>@gate-cse-2027:~$ <span class="g">choose</span> <span class="c">--theme</span> <span>[executive|hacker|netflix|cyberpunk]</span>
   </div>
 
   <div class="choose-title">Choose Your Experience</div>
@@ -495,6 +546,33 @@ html,body{
       </button>
     </div>
 
+    <!-- CYBERPUNK CARD -->
+    <div class="theme-card card-cyberpunk" id="cardCyberpunk" onclick="selectTheme('cyberpunk')" role="button" tabindex="0" aria-label="Choose Cyberpunk Night City mode">
+      <div class="c-accent-bar"></div>
+      <div class="c-preview">
+        <div class="prev-line" style="width:80%"></div>
+        <div class="prev-line thin" style="width:55%"></div>
+        <div class="prev-line thin" style="width:70%"></div>
+        <div class="prev-dot-row">
+          <div class="prev-dot"></div>
+          <div class="prev-dot" style="width:10px;border-radius:0;transform:rotate(45deg)"></div>
+        </div>
+      </div>
+      <span class="c-badge">TAMZ Night City</span>
+      <div class="c-name">NIGHT_CITY<br><span style="color:var(--cp-yel);text-shadow:0 0 12px rgba(245,230,66,.4)">// MODE</span></div>
+      <div class="c-tagline">Orbitron display, magenta + yellow + cyan palette, glitch effects, diagonal clips, and katakana rain canvas.</div>
+      <div class="c-features">
+        <span>Magenta / yellow / cyan palette</span>
+        <span>Orbitron display typeface</span>
+        <span>Glitch + scanline effects</span>
+        <span>Custom diamond cursor</span>
+      </div>
+      <button class="c-btn">
+        <span>JACK IN</span>
+        <span>&#9658;</span>
+      </button>
+    </div>
+
   </div>
 
   <div class="or-divider">// preference is saved · switch anytime from within either theme</div>
@@ -539,24 +617,26 @@ html,body{
   if(!note2) return;
   note2.textContent=saved2?'// Last session: '+saved2+' — choose to continue or switch':'// No preference set — choose below to continue';
   var saved=localStorage.getItem('tamz-theme');
-  if(saved==='hacker'||saved==='executive'||saved==='netflix'){
-    // Auto-redirect first-time / tab-restored visits
-    window.location.replace(saved==='hacker'?'hacker.html':saved==='executive'?'executive.html':'netflix_redesign.html');
+  if(saved==='hacker'||saved==='executive'||saved==='netflix'||saved==='cyberpunk'){
+    var themeMap={hacker:'hacker.html',executive:'executive.html',netflix:'netflix_redesign.html',cyberpunk:'cyberpunk.html'};
+    window.location.replace(themeMap[saved]);
     return;
   }
 })();
 
 // ─── Theme selection ─────────────────────────────────────────
 function selectTheme(theme){
-  var card=document.getElementById(theme==='hacker'?'cardHacker':theme==='executive'?'cardExec':'cardNetflix');
-  card.classList.add('selected');
+  var idMap={hacker:'cardHacker',executive:'cardExec',netflix:'cardNetflix',cyberpunk:'cardCyberpunk'};
+  var card=document.getElementById(idMap[theme]);
+  if(card) card.classList.add('selected');
   localStorage.setItem('tamz-theme',theme);
 
   var cover=document.getElementById('transition-cover');
   cover.classList.add('active');
 
+  var themeMap={hacker:'hacker.html',executive:'executive.html',netflix:'netflix_redesign.html',cyberpunk:'cyberpunk.html'};
   setTimeout(function(){
-    window.location.replace(theme==='hacker'?'hacker.html':theme==='executive'?'executive.html':'netflix_redesign.html');
+    window.location.replace(themeMap[theme]||'index.html');
   },350);
 }
 
@@ -572,3 +652,4 @@ document.querySelectorAll('.theme-card').forEach(function(card){
 </script>
 </body>
 </html>
+
