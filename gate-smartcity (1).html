@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TAMZ NEXUS — GATE Smart City</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&family=Orbitron:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --void:#050608;--deep:#080b10;--surface:#0d1117;--panel:#111827;--raised:#1a2235;
+  --border:rgba(99,179,237,0.12);--border2:rgba(99,179,237,0.22);
+  --ink:#e2e8f0;--ink2:#94a3b8;--ink3:#475569;
+  --cyan:#00e5ff;--cyan2:rgba(0,229,255,0.15);--cyan3:rgba(0,229,255,0.06);
+  --amber:#ffb300;--green:#00e676;--green2:rgba(0,230,118,0.12);
+  --purple:#b388ff;--purple2:rgba(179,136,255,0.12);
+  --red:#ff5252;--teal:#64ffda;--pink:#ff80ab;--orange:#ff9100;
+  --mono:'Space Mono',monospace;--grotesk:'Space Grotesk',sans-serif;--orbit:'Orbitron',monospace;
+}
+html{scroll-behavior:smooth;background:var(--void)}
+body{font-family:var(--grotesk);background:var(--void);color:var(--ink);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+::selection{background:rgba(0,229,255,0.3);color:#fff}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+a{color:inherit;text-decoration:none}
+
+#boot{position:fixed;inset:0;z-index:9999;background:var(--void);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;transition:opacity 0.8s ease}
+#boot.hidden{opacity:0;pointer-events:none}
+.boot-logo{font-family:var(--orbit);font-size:clamp(28px,5vw,52px);font-weight:900;letter-spacing:0.15em;color:var(--cyan);text-shadow:0 0 40px rgba(0,229,255,0.5)}
+.boot-sub{font-family:var(--mono);font-size:11px;color:var(--ink3);letter-spacing:0.2em;text-transform:uppercase}
+.boot-bar-wrap{width:280px;height:1px;background:rgba(99,179,237,0.1);position:relative;overflow:hidden}
+.boot-bar{height:100%;background:linear-gradient(90deg,transparent,var(--cyan),transparent);width:40%;animation:bootScan 1.2s ease infinite}
+@keyframes bootScan{0%{transform:translateX(-200%)}100%{transform:translateX(400%)}}
+.boot-status{font-family:var(--mono);font-size:10px;color:var(--ink3);letter-spacing:0.1em;min-height:14px}
+
+#hud{position:fixed;top:0;left:0;right:0;height:48px;background:rgba(5,6,8,0.94);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);z-index:400;display:flex;align-items:center;padding:0 20px;gap:16px}
+.hud-logo{font-family:var(--orbit);font-size:14px;font-weight:700;color:var(--cyan);letter-spacing:0.12em;white-space:nowrap}
+.hud-sep{color:var(--ink3);font-size:10px}
+.hud-countdown{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--amber)}
+.hud-cd-num{font-weight:700}
+.hud-cd-unit{font-size:9px;color:var(--ink3);margin-right:3px}
+.hud-phase{font-family:var(--mono);font-size:9px;color:var(--cyan);letter-spacing:0.1em;padding:2px 8px;border:1px solid rgba(0,229,255,0.3);border-radius:2px}
+.hud-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.hud-btn{background:none;border:1px solid var(--border);color:var(--ink2);cursor:pointer;padding:4px 10px;border-radius:3px;font-family:var(--mono);font-size:9px;letter-spacing:0.08em;transition:all 0.2s}
+.hud-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+.hud-scan{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+@keyframes glitch{0%,90%,100%{text-shadow:0 0 40px rgba(0,229,255,0.5)}92%{text-shadow:3px 0 0 rgba(255,0,80,0.6),-3px 0 0 rgba(0,255,255,0.6),0 0 40px rgba(0,229,255,0.5)}94%{text-shadow:-2px 0 0 rgba(255,0,80,0.4),2px 0 0 rgba(0,255,255,0.4)}}
+.glitch{animation:glitch 4s ease infinite}
+
+#city-canvas{width:100%;height:100vh;position:relative;overflow:hidden;background:var(--void);cursor:grab}
+#city-canvas.grabbing{cursor:grabbing}
+#city-svg-wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;transform-origin:center center}
+
+.city-grid-line{stroke:rgba(0,229,255,0.04);stroke-width:0.5;fill:none}
+.road{stroke:rgba(0,229,255,0.18);stroke-width:2;fill:none}
+.road-main{stroke:rgba(0,229,255,0.3);stroke-width:3;fill:none}
+.road-glow{stroke:rgba(0,229,255,0.06);stroke-width:10;fill:none}
+.district-label{font-family:'Orbitron',monospace;font-size:9px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase}
+.bldg-base{stroke-width:0.5;rx:3;cursor:pointer;transition:filter 0.25s}
+.bldg-base:hover,.bldg-group:hover .bldg-base{filter:brightness(1.5) drop-shadow(0 0 8px currentColor)}
+.bldg-group{cursor:pointer}
+.bldg-label{font-family:'Space Grotesk',sans-serif;font-size:8px;font-weight:600;letter-spacing:0.06em;pointer-events:none}
+.bldg-sublabel{font-family:'Space Mono',monospace;font-size:6px;pointer-events:none;opacity:0.7}
+.bldg-dot{animation:blinkDot 1.8s ease infinite}
+@keyframes blinkDot{0%,100%{opacity:1}50%{opacity:0.15}}
+
+.veh{animation:vehX 9s linear infinite}
+.veh2{animation:vehX2 13s linear infinite}
+.veh3{animation:vehY 11s linear infinite}
+.veh4{animation:vehY2 14s linear infinite}
+@keyframes vehX{0%{transform:translateX(-40px)}100%{transform:translateX(1450px)}}
+@keyframes vehX2{0%{transform:translateX(1450px) scaleX(-1)}100%{transform:translateX(-40px) scaleX(-1)}}
+@keyframes vehY{0%{transform:translateY(-40px)}100%{transform:translateY(1050px)}}
+@keyframes vehY2{0%{transform:translateY(1050px) scaleY(-1)}100%{transform:translateY(-40px) scaleY(-1)}}
+
+#city-panel{position:fixed;top:58px;right:20px;width:310px;background:rgba(8,11,16,0.97);border:1px solid var(--border2);border-radius:8px;z-index:500;overflow:hidden;transform:translateX(350px);transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);backdrop-filter:blur(20px)}
+#city-panel.open{transform:translateX(0)}
+.panel-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.panel-icon{width:38px;height:38px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.panel-title{font-family:var(--orbit);font-size:11px;font-weight:600;letter-spacing:0.07em;line-height:1.3}
+.panel-district{font-family:var(--mono);font-size:8px;color:var(--ink3);letter-spacing:0.08em;margin-top:2px;text-transform:uppercase}
+.panel-body{padding:14px;display:flex;flex-direction:column;gap:11px}
+.panel-desc{font-size:11.5px;color:var(--ink2);line-height:1.7}
+.panel-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px}
+.panel-stat{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:7px 8px}
+.panel-stat-n{font-family:var(--mono);font-size:13px;font-weight:700;line-height:1}
+.panel-stat-l{font-size:8px;color:var(--ink3);letter-spacing:0.06em;margin-top:2px;text-transform:uppercase}
+.panel-tags{display:flex;gap:4px;flex-wrap:wrap}
+.panel-tag{font-size:8px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid;font-family:var(--mono)}
+.panel-cta{display:block;width:100%;padding:9px;border-radius:5px;font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-align:center;cursor:pointer;transition:all 0.2s;text-transform:uppercase}
+.panel-cta:hover{filter:brightness(1.2)}
+.panel-close{margin-left:auto;background:none;border:1px solid var(--border);color:var(--ink3);cursor:pointer;width:24px;height:24px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;transition:all 0.2s}
+.panel-close:hover{border-color:var(--red);color:var(--red)}
+.prog-bar-wrap{background:rgba(255,255,255,0.06);border-radius:2px;height:3px;overflow:hidden}
+.prog-bar-fill{height:100%;border-radius:2px;transition:width 1.2s ease}
+
+#ai-guide{position:fixed;bottom:76px;left:20px;width:290px;background:rgba(8,11,16,0.97);border:1px solid rgba(179,136,255,0.3);border-radius:8px;z-index:500;padding:13px;backdrop-filter:blur(20px);transform:translateY(20px);opacity:0;transition:all 0.4s ease}
+#ai-guide.visible{transform:translateY(0);opacity:1}
+.ai-head{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.ai-avatar{width:28px;height:28px;border-radius:50%;background:rgba(179,136,255,0.15);border:1px solid rgba(179,136,255,0.4);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.ai-name{font-family:var(--orbit);font-size:9px;color:var(--purple);letter-spacing:0.08em}
+.ai-status-txt{font-family:var(--mono);font-size:7px;color:var(--ink3)}
+.ai-text{font-size:11px;color:var(--ink2);line-height:1.7;min-height:40px}
+.ai-cursor{display:inline-block;width:2px;height:11px;background:var(--purple);animation:aiCur 0.7s ease infinite;vertical-align:bottom;margin-left:2px}
+@keyframes aiCur{0%,100%{opacity:1}50%{opacity:0}}
+.ai-close-btn{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--ink3);cursor:pointer;font-size:11px}
+
+#bottom-nav{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(8,11,16,0.97);border:1px solid var(--border);border-radius:40px;padding:5px 7px;display:flex;gap:3px;z-index:400;backdrop-filter:blur(20px)}
+.nav-item{display:flex;align-items:center;gap:5px;padding:6px 13px;border-radius:30px;cursor:pointer;transition:all 0.2s;border:1px solid transparent;font-size:10px;font-weight:500;color:var(--ink3);white-space:nowrap}
+.nav-item:hover{color:var(--ink);border-color:var(--border)}
+.nav-item.active{background:rgba(0,229,255,0.1);border-color:rgba(0,229,255,0.3);color:var(--cyan)}
+
+#minimap{position:fixed;bottom:76px;right:20px;width:120px;background:rgba(8,11,16,0.97);border:1px solid var(--border);border-radius:5px;overflow:hidden;z-index:390}
+.minimap-label{font-family:var(--mono);font-size:7px;color:var(--ink3);letter-spacing:0.1em;padding:4px 7px;border-bottom:1px solid var(--border);text-transform:uppercase}
+
+#legend{position:fixed;left:20px;top:58px;background:rgba(8,11,16,0.92);border:1px solid var(--border);border-radius:5px;padding:10px;z-index:390;backdrop-filter:blur(12px)}
+.legend-title{font-family:var(--mono);font-size:7px;color:var(--ink3);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:7px}
+.legend-item{display:flex;align-items:center;gap:7px;margin-bottom:4px;cursor:pointer;padding:2px 0;transition:opacity 0.2s}
+.legend-item:hover{opacity:0.75}
+.legend-dot{width:7px;height:7px;border-radius:2px;flex-shrink:0}
+.legend-text{font-size:9.5px;color:var(--ink2);font-weight:500}
+
+#feed{position:fixed;left:20px;bottom:76px;width:210px;background:rgba(8,11,16,0.9);border:1px solid var(--border);border-radius:5px;overflow:hidden;z-index:390;max-height:150px}
+.feed-head{font-family:var(--mono);font-size:7px;color:var(--ink3);letter-spacing:0.12em;padding:5px 9px;border-bottom:1px solid var(--border);text-transform:uppercase;display:flex;align-items:center;gap:5px}
+#feed-log{padding:5px;max-height:120px;overflow:hidden;display:flex;flex-direction:column;gap:1px}
+.feed-line{font-family:var(--mono);font-size:8.5px;color:var(--ink3);padding:1px 3px;animation:feedFade 0.4s ease}
+.feed-line span{color:var(--cyan)}
+.feed-line.warn span{color:var(--amber)}
+.feed-line.ok span{color:var(--green)}
+@keyframes feedFade{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+
+#tooltip{position:fixed;pointer-events:none;z-index:800;background:rgba(8,11,16,0.97);border:1px solid var(--border2);border-radius:4px;padding:6px 10px;font-family:var(--mono);font-size:9px;color:var(--cyan);letter-spacing:0.05em;opacity:0;transition:opacity 0.15s;white-space:nowrap}
+
+#zoom-ctrl{position:fixed;right:20px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:4px;z-index:390}
+.zoom-btn{width:30px;height:30px;background:rgba(8,11,16,0.97);border:1px solid var(--border);border-radius:4px;color:var(--ink2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;font-family:var(--mono);transition:all 0.2s}
+.zoom-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+
+#scanlines{position:fixed;inset:0;pointer-events:none;z-index:1001;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.07) 2px,rgba(0,0,0,0.07) 4px);opacity:0.45}
+#particles{position:fixed;inset:0;pointer-events:none;z-index:1}
+
+#modal-overlay{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,0.72);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px}
+#modal-overlay.open{display:flex}
+#modal{width:100%;max-width:520px;background:var(--panel);border:1px solid var(--border2);border-radius:10px;overflow:hidden;animation:modalIn 0.22s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(0.96)}to{opacity:1;transform:scale(1)}}
+.modal-head{padding:18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:13px}
+.modal-icon{width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.modal-title{font-family:var(--orbit);font-size:14px;font-weight:700;letter-spacing:0.06em}
+.modal-sub{font-size:10px;color:var(--ink3);margin-top:2px;font-family:var(--mono)}
+.modal-close{margin-left:auto;background:none;border:1px solid var(--border);color:var(--ink3);cursor:pointer;width:27px;height:27px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all 0.2s;flex-shrink:0}
+.modal-close:hover{border-color:var(--red);color:var(--red)}
+.modal-body{padding:18px;display:flex;flex-direction:column;gap:12px;max-height:62vh;overflow-y:auto}
+.modal-desc{font-size:12.5px;color:var(--ink2);line-height:1.8}
+.modal-links{display:flex;flex-direction:column;gap:5px}
+.modal-link{display:flex;align-items:center;gap:10px;padding:9px 13px;border-radius:5px;border:1px solid var(--border);background:var(--surface);transition:all 0.2s;cursor:pointer}
+.modal-link:hover{border-color:var(--cyan);background:rgba(0,229,255,0.05)}
+.modal-link-icon{font-size:15px;flex-shrink:0}
+.modal-link-text{flex:1}
+.modal-link-name{font-size:12px;font-weight:600}
+.modal-link-url{font-family:var(--mono);font-size:9px;color:var(--ink3);margin-top:1px}
+.modal-link-arr{color:var(--ink3);font-size:11px;transition:color 0.2s}
+.modal-link:hover .modal-link-arr{color:var(--cyan)}
+
+#cpBackdrop{display:none;position:fixed;inset:0;z-index:700;background:rgba(0,0,0,0.72);backdrop-filter:blur(8px);align-items:flex-start;justify-content:center;padding-top:14vh}
+#cpBackdrop.open{display:flex}
+.cp-modal{width:100%;max-width:560px;background:#0d1117;border:1px solid rgba(0,229,255,0.22);border-radius:10px;overflow:hidden;animation:modalIn 0.15s ease}
+.cp-row{display:flex;align-items:center;gap:10px;padding:13px 17px;border-bottom:1px solid rgba(0,229,255,0.08)}
+#cpInput{flex:1;background:none;border:none;outline:none;font-family:var(--grotesk);font-size:14px;color:var(--ink);caret-color:var(--cyan)}
+#cpInput::placeholder{color:var(--ink3)}
+.cp-esc{font-size:8px;font-weight:700;color:var(--ink3);border:1px solid rgba(99,179,237,0.2);border-radius:3px;padding:2px 5px;font-family:var(--mono)}
+#cpResults{max-height:360px;overflow-y:auto;padding:5px}
+.cp-item{display:flex;align-items:center;gap:11px;padding:8px 11px;border-radius:5px;cursor:pointer;transition:background 0.12s}
+.cp-item:hover{background:rgba(0,229,255,0.06)}
+.cp-item-icon{width:26px;height:26px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.cp-item-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cp-item-sub{font-size:9px;color:var(--ink3);font-family:var(--mono);margin-top:1px}
+.cp-tag{font-size:7px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:2px 6px;border-radius:3px;border:1px solid;font-family:var(--mono);flex-shrink:0}
+.cp-footer{padding:7px 15px;border-top:1px solid rgba(0,229,255,0.07);display:flex;gap:12px}
+.cp-hint{font-size:8px;color:var(--ink3);font-family:var(--mono)}
+.cp-hint kbd{border:1px solid rgba(99,179,237,0.18);border-radius:2px;padding:1px 4px}
+
+@media(max-width:768px){#legend{display:none}#feed{display:none}#minimap{display:none}#city-panel{width:280px}.hud-countdown{display:none}}
+</style>
+</head>
+<body>
+<div id="scanlines"></div>
+<canvas id="particles"></canvas>
+
+<div id="boot">
+  <div class="boot-logo glitch">TAMZ NEXUS</div>
+  <div class="boot-sub">Gate Smart City · Neural Interface v2.7</div>
+  <div class="boot-bar-wrap"><div class="boot-bar"></div></div>
+  <div class="boot-status" id="boot-status">Initializing neural grid...</div>
+</div>
+
+<div id="hud">
+  <div class="hud-logo">TAMZ</div>
+  <div class="hud-sep">◆</div>
+  <div class="hud-countdown">
+    <span class="hud-cd-num" id="hd">—</span><span class="hud-cd-unit">D</span>
+    <span class="hud-cd-num" id="hh">—</span><span class="hud-cd-unit">H</span>
+    <span class="hud-cd-num" id="hm">—</span><span class="hud-cd-unit">M</span>
+  </div>
+  <div class="hud-sep" style="color:var(--ink3)">·</div>
+  <div class="hud-phase" id="hphase">PHASE 1</div>
+  <div class="hud-right">
+    <div class="hud-scan"></div>
+    <button class="hud-btn" id="cmdBtn">⌕ CMD+K</button>
+    <button class="hud-btn" onclick="openModal('hub')">◈ ALL TOOLS</button>
+  </div>
+</div>
+<div id="city-canvas">
+ <div id="city-svg-wrap">
+  <svg id="city-svg" viewBox="0 0 1400 1000" width="1400" height="1000" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
+   <defs>
+    <filter id="sglow"><feGaussianBlur stdDeviation="14"/></filter>
+    <filter id="mglow"><feGaussianBlur stdDeviation="6"/></filter>
+    <radialGradient id="sky" cx="50%" cy="25%" r="75%">
+     <stop offset="0%" stop-color="#0a1628"/>
+     <stop offset="100%" stop-color="#050608"/>
+    </radialGradient>
+   </defs>
+   <rect width="1400" height="1000" fill="url(#sky)"/>
+   <!-- district auras -->
+   <ellipse cx="320" cy="380" rx="220" ry="160" fill="rgba(0,230,118,0.04)" filter="url(#sglow)"/>
+   <ellipse cx="700" cy="280" rx="200" ry="150" fill="rgba(0,229,255,0.05)" filter="url(#sglow)"/>
+   <ellipse cx="1080" cy="380" rx="220" ry="160" fill="rgba(179,136,255,0.04)" filter="url(#sglow)"/>
+   <ellipse cx="320" cy="690" rx="180" ry="130" fill="rgba(255,179,0,0.03)" filter="url(#sglow)"/>
+   <ellipse cx="1080" cy="690" rx="180" ry="130" fill="rgba(255,128,171,0.03)" filter="url(#sglow)"/>
+   <ellipse cx="700" cy="890" rx="550" ry="80" fill="rgba(0,229,255,0.03)" filter="url(#sglow)"/>
+   <!-- stars -->
+   <circle cx="80" cy="25" r="0.9" fill="rgba(255,255,255,0.45)"/>
+   <circle cx="220" cy="40" r="0.6" fill="rgba(255,255,255,0.3)"/>
+   <circle cx="400" cy="18" r="1.1" fill="rgba(255,255,255,0.5)"/>
+   <circle cx="560" cy="35" r="0.7" fill="rgba(0,229,255,0.5)"/>
+   <circle cx="750" cy="14" r="0.9" fill="rgba(255,255,255,0.4)"/>
+   <circle cx="900" cy="30" r="0.6" fill="rgba(179,136,255,0.5)"/>
+   <circle cx="1120" cy="20" r="1" fill="rgba(255,255,255,0.5)"/>
+   <circle cx="1300" cy="38" r="0.7" fill="rgba(0,229,255,0.4)"/>
+   <circle cx="160" cy="55" r="0.5" fill="rgba(0,229,255,0.35)"/>
+   <circle cx="650" cy="44" r="0.6" fill="rgba(179,136,255,0.4)"/>
+   <circle cx="980" cy="22" r="0.8" fill="rgba(255,179,0,0.3)"/>
+
+   <!-- GRID -->
+   <line x1="0" y1="180" x2="1400" y2="180" class="city-grid-line"/>
+   <line x1="0" y1="360" x2="1400" y2="360" class="city-grid-line"/>
+   <line x1="0" y1="540" x2="1400" y2="540" class="city-grid-line"/>
+   <line x1="0" y1="720" x2="1400" y2="720" class="city-grid-line"/>
+   <line x1="0" y1="820" x2="1400" y2="820" class="city-grid-line"/>
+   <line x1="175" y1="0" x2="175" y2="1000" class="city-grid-line"/>
+   <line x1="525" y1="0" x2="525" y2="1000" class="city-grid-line"/>
+   <line x1="700" y1="0" x2="700" y2="1000" class="city-grid-line"/>
+   <line x1="875" y1="0" x2="875" y2="1000" class="city-grid-line"/>
+   <line x1="1225" y1="0" x2="1225" y2="1000" class="city-grid-line"/>
+
+   <!-- ROADS -->
+   <line x1="0" y1="530" x2="1400" y2="530" class="road-glow"/>
+   <line x1="0" y1="530" x2="1400" y2="530" class="road-main"/>
+   <line x1="700" y1="0" x2="700" y2="1000" class="road-glow"/>
+   <line x1="700" y1="0" x2="700" y2="1000" class="road-main"/>
+   <line x1="0" y1="270" x2="1400" y2="270" class="road"/>
+   <line x1="0" y1="775" x2="1400" y2="775" class="road"/>
+   <line x1="350" y1="0" x2="350" y2="820" class="road"/>
+   <line x1="1050" y1="0" x2="1050" y2="820" class="road"/>
+   <!-- diagonal expressways -->
+   <line x1="0" y1="0" x2="700" y2="530" stroke="rgba(0,229,255,0.07)" stroke-width="1.5" fill="none"/>
+   <line x1="1400" y1="0" x2="700" y2="530" stroke="rgba(0,229,255,0.07)" stroke-width="1.5" fill="none"/>
+   <line x1="0" y1="820" x2="700" y2="530" stroke="rgba(0,229,255,0.07)" stroke-width="1.5" fill="none"/>
+   <line x1="1400" y1="820" x2="700" y2="530" stroke="rgba(0,229,255,0.07)" stroke-width="1.5" fill="none"/>
+   <!-- road labels -->
+   <text x="60" y="524" font-family="Space Mono" font-size="7" fill="rgba(0,229,255,0.35)" letter-spacing="2">FOUNDATION BLVD</text>
+   <text x="706" y="160" font-family="Space Mono" font-size="7" fill="rgba(0,229,255,0.35)" letter-spacing="2" writing-mode="tb">NEXUS SPINE</text>
+
+   <!-- DISTRICT ZONES -->
+   <rect x="30" y="55" width="600" height="190" rx="5" fill="rgba(0,230,118,0.03)" stroke="rgba(0,230,118,0.09)" stroke-width="0.8"/>
+   <text x="44" y="73" class="district-label" fill="rgba(0,230,118,0.5)">◈ CORE DISTRICT</text>
+   <rect x="770" y="55" width="600" height="190" rx="5" fill="rgba(0,229,255,0.03)" stroke="rgba(0,229,255,0.09)" stroke-width="0.8"/>
+   <text x="784" y="73" class="district-label" fill="rgba(0,229,255,0.5)">◈ SYSTEMS QUARTER</text>
+   <rect x="30" y="570" width="600" height="195" rx="5" fill="rgba(255,179,0,0.03)" stroke="rgba(255,179,0,0.09)" stroke-width="0.8"/>
+   <text x="44" y="588" class="district-label" fill="rgba(255,179,0,0.5)">◈ MATH CITADEL</text>
+   <rect x="770" y="570" width="600" height="195" rx="5" fill="rgba(179,136,255,0.03)" stroke="rgba(179,136,255,0.09)" stroke-width="0.8"/>
+   <text x="784" y="588" class="district-label" fill="rgba(179,136,255,0.5)">◈ THEORY NEXUS</text>
+   <rect x="30" y="832" width="1340" height="130" rx="5" fill="rgba(0,229,255,0.03)" stroke="rgba(0,229,255,0.09)" stroke-width="0.8"/>
+   <text x="44" y="850" class="district-label" fill="rgba(0,229,255,0.45)">◈ SIMULATION HARBOR</text>
+
+   <!-- ═══════════════════════════════════ -->
+   <!-- CORE DISTRICT buildings -->
+
+   <!-- Data Structures Tower -->
+   <g class="bldg-group" data-id="ds" onclick="openBuilding('ds')">
+    <rect x="60" y="98" width="66" height="118" fill="#061a10" stroke="#00e676" stroke-width="0.8" rx="2"/>
+    <rect x="60" y="85" width="66" height="15" fill="#04120a" stroke="#00e676" stroke-width="0.6" rx="2"/>
+    <line x1="93" y1="70" x2="93" y2="86" stroke="#00e676" stroke-width="0.8"/>
+    <circle cx="93" cy="69" r="3" fill="#00e676" class="bldg-dot"/>
+    <rect x="68" y="103" width="11" height="7" fill="rgba(0,230,118,0.55)" rx="1"/>
+    <rect x="85" y="103" width="11" height="7" fill="rgba(0,230,118,0.3)" rx="1"/>
+    <rect x="102" y="103" width="16" height="7" fill="rgba(0,230,118,0.4)" rx="1"/>
+    <rect x="68" y="117" width="11" height="7" fill="rgba(0,230,118,0.25)" rx="1"/>
+    <rect x="85" y="117" width="11" height="7" fill="rgba(0,230,118,0.5)" rx="1"/>
+    <rect x="102" y="117" width="16" height="7" fill="rgba(0,230,118,0.3)" rx="1"/>
+    <rect x="68" y="131" width="11" height="7" fill="rgba(0,230,118,0.45)" rx="1"/>
+    <rect x="85" y="131" width="11" height="7" fill="rgba(0,230,118,0.2)" rx="1"/>
+    <rect x="102" y="131" width="16" height="7" fill="rgba(0,230,118,0.55)" rx="1"/>
+    <rect x="68" y="145" width="11" height="7" fill="rgba(0,230,118,0.3)" rx="1"/>
+    <rect x="85" y="145" width="11" height="7" fill="rgba(0,230,118,0.5)" rx="1"/>
+    <rect x="102" y="145" width="16" height="7" fill="rgba(0,230,118,0.2)" rx="1"/>
+    <rect x="68" y="159" width="11" height="7" fill="rgba(0,230,118,0.5)" rx="1"/>
+    <rect x="85" y="159" width="11" height="7" fill="rgba(0,230,118,0.3)" rx="1"/>
+    <rect x="102" y="159" width="16" height="7" fill="rgba(0,230,118,0.45)" rx="1"/>
+    <text x="93" y="232" class="bldg-label" text-anchor="middle" fill="#00e676">DATA STRUCTS</text>
+    <text x="93" y="241" class="bldg-sublabel" text-anchor="middle" fill="#4caf50">CORE · PH1</text>
+   </g>
+
+   <!-- Algorithms Spire -->
+   <g class="bldg-group" data-id="algo" onclick="openBuilding('algo')">
+    <rect x="158" y="82" width="56" height="134" fill="#060e1a" stroke="#00e5ff" stroke-width="0.8" rx="2"/>
+    <polygon points="186,68 214,82 158,82" fill="#040c18" stroke="#00e5ff" stroke-width="0.7"/>
+    <line x1="186" y1="55" x2="186" y2="70" stroke="#00e5ff" stroke-width="0.8"/>
+    <circle cx="186" cy="54" r="2.5" fill="#00e5ff" class="bldg-dot"/>
+    <rect x="165" y="90" width="42" height="4" fill="rgba(0,229,255,0.3)" rx="1"/>
+    <rect x="165" y="100" width="42" height="4" fill="rgba(0,229,255,0.18)" rx="1"/>
+    <rect x="165" y="110" width="42" height="4" fill="rgba(0,229,255,0.35)" rx="1"/>
+    <rect x="165" y="120" width="42" height="4" fill="rgba(0,229,255,0.2)" rx="1"/>
+    <rect x="165" y="130" width="42" height="4" fill="rgba(0,229,255,0.32)" rx="1"/>
+    <rect x="165" y="140" width="42" height="4" fill="rgba(0,229,255,0.15)" rx="1"/>
+    <rect x="165" y="150" width="42" height="4" fill="rgba(0,229,255,0.4)" rx="1"/>
+    <rect x="165" y="160" width="42" height="4" fill="rgba(0,229,255,0.22)" rx="1"/>
+    <rect x="165" y="170" width="42" height="4" fill="rgba(0,229,255,0.28)" rx="1"/>
+    <text x="186" y="232" class="bldg-label" text-anchor="middle" fill="#00e5ff">ALGORITHMS</text>
+    <text x="186" y="241" class="bldg-sublabel" text-anchor="middle" fill="#4dd0e1">CORE · PH1-2</text>
+   </g>
+
+   <!-- OS Complex (wide) -->
+   <g class="bldg-group" data-id="os" onclick="openBuilding('os')">
+    <rect x="240" y="92" width="82" height="124" fill="#1a0f00" stroke="#ffb300" stroke-width="0.8" rx="2"/>
+    <rect x="240" y="79" width="14" height="15" fill="#140b00" stroke="#ffb300" stroke-width="0.6" rx="1"/>
+    <rect x="260" y="79" width="14" height="15" fill="#140b00" stroke="#ffb300" stroke-width="0.6" rx="1"/>
+    <rect x="280" y="79" width="14" height="15" fill="#140b00" stroke="#ffb300" stroke-width="0.6" rx="1"/>
+    <rect x="300" y="79" width="14" height="15" fill="#140b00" stroke="#ffb300" stroke-width="0.6" rx="1"/>
+    <rect x="248" y="100" width="11" height="7" fill="rgba(255,179,0,0.5)" rx="1"/>
+    <rect x="266" y="100" width="11" height="7" fill="rgba(255,179,0,0.3)" rx="1"/>
+    <rect x="284" y="100" width="11" height="7" fill="rgba(255,179,0,0.55)" rx="1"/>
+    <rect x="302" y="100" width="12" height="7" fill="rgba(255,179,0,0.2)" rx="1"/>
+    <rect x="248" y="115" width="11" height="7" fill="rgba(255,179,0,0.25)" rx="1"/>
+    <rect x="266" y="115" width="11" height="7" fill="rgba(255,179,0,0.5)" rx="1"/>
+    <rect x="284" y="115" width="11" height="7" fill="rgba(255,179,0,0.35)" rx="1"/>
+    <rect x="302" y="115" width="12" height="7" fill="rgba(255,179,0,0.45)" rx="1"/>
+    <rect x="248" y="130" width="11" height="7" fill="rgba(255,179,0,0.45)" rx="1"/>
+    <rect x="266" y="130" width="11" height="7" fill="rgba(255,179,0,0.2)" rx="1"/>
+    <rect x="284" y="130" width="11" height="7" fill="rgba(255,179,0,0.5)" rx="1"/>
+    <rect x="302" y="130" width="12" height="7" fill="rgba(255,179,0,0.3)" rx="1"/>
+    <rect x="248" y="145" width="11" height="7" fill="rgba(255,179,0,0.3)" rx="1"/>
+    <rect x="266" y="145" width="11" height="7" fill="rgba(255,179,0,0.55)" rx="1"/>
+    <rect x="284" y="145" width="11" height="7" fill="rgba(255,179,0,0.2)" rx="1"/>
+    <rect x="302" y="145" width="12" height="7" fill="rgba(255,179,0,0.4)" rx="1"/>
+    <text x="281" y="232" class="bldg-label" text-anchor="middle" fill="#ffb300">OP SYSTEMS</text>
+    <text x="281" y="241" class="bldg-sublabel" text-anchor="middle" fill="#ffd54f">SYSTEMS · PH2</text>
+   </g>
+
+   <!-- DBMS Dome -->
+   <g class="bldg-group" data-id="dbms" onclick="openBuilding('dbms')">
+    <rect x="358" y="86" width="64" height="130" fill="#0f0520" stroke="#b388ff" stroke-width="0.8" rx="2"/>
+    <path d="M358,86 Q390,62 422,86" fill="#0c041c" stroke="#b388ff" stroke-width="0.8" fill-rule="evenodd"/>
+    <circle cx="390" cy="70" r="4" fill="#b388ff" opacity="0.7" class="bldg-dot"/>
+    <rect x="366" y="94" width="11" height="7" fill="rgba(179,136,255,0.55)" rx="1"/>
+    <rect x="383" y="94" width="11" height="7" fill="rgba(179,136,255,0.3)" rx="1"/>
+    <rect x="400" y="94" width="14" height="7" fill="rgba(179,136,255,0.5)" rx="1"/>
+    <rect x="366" y="109" width="11" height="7" fill="rgba(179,136,255,0.3)" rx="1"/>
+    <rect x="383" y="109" width="11" height="7" fill="rgba(179,136,255,0.55)" rx="1"/>
+    <rect x="400" y="109" width="14" height="7" fill="rgba(179,136,255,0.2)" rx="1"/>
+    <rect x="366" y="124" width="11" height="7" fill="rgba(179,136,255,0.5)" rx="1"/>
+    <rect x="383" y="124" width="11" height="7" fill="rgba(179,136,255,0.2)" rx="1"/>
+    <rect x="400" y="124" width="14" height="7" fill="rgba(179,136,255,0.45)" rx="1"/>
+    <rect x="366" y="139" width="11" height="7" fill="rgba(179,136,255,0.2)" rx="1"/>
+    <rect x="383" y="139" width="11" height="7" fill="rgba(179,136,255,0.5)" rx="1"/>
+    <rect x="400" y="139" width="14" height="7" fill="rgba(179,136,255,0.35)" rx="1"/>
+    <text x="390" y="232" class="bldg-label" text-anchor="middle" fill="#b388ff">DBMS</text>
+    <text x="390" y="241" class="bldg-sublabel" text-anchor="middle" fill="#ce93d8">SYSTEMS · PH2</text>
+   </g>
+
+   <!-- C Programming -->
+   <g class="bldg-group" data-id="cprog" onclick="openBuilding('cprog')">
+    <rect x="458" y="100" width="52" height="116" fill="#001a12" stroke="#64ffda" stroke-width="0.8" rx="2"/>
+    <rect x="458" y="88" width="52" height="14" fill="#001410" stroke="#64ffda" stroke-width="0.6" rx="2"/>
+    <rect x="465" y="108" width="38" height="4" fill="rgba(100,255,218,0.45)" rx="1"/>
+    <rect x="465" y="118" width="38" height="4" fill="rgba(100,255,218,0.25)" rx="1"/>
+    <rect x="465" y="128" width="38" height="4" fill="rgba(100,255,218,0.45)" rx="1"/>
+    <rect x="465" y="138" width="38" height="4" fill="rgba(100,255,218,0.3)" rx="1"/>
+    <rect x="465" y="148" width="38" height="4" fill="rgba(100,255,218,0.5)" rx="1"/>
+    <rect x="465" y="158" width="38" height="4" fill="rgba(100,255,218,0.2)" rx="1"/>
+    <rect x="465" y="168" width="38" height="4" fill="rgba(100,255,218,0.4)" rx="1"/>
+    <text x="484" y="232" class="bldg-label" text-anchor="middle" fill="#64ffda">C PROG</text>
+    <text x="484" y="241" class="bldg-sublabel" text-anchor="middle" fill="#80cbc4">CORE · PH1</text>
+   </g>
+
+   <!-- ═══════════════════════════════════ -->
+   <!-- CENTRAL COMMAND TOWER -->
+   <g class="bldg-group" data-id="hub" onclick="openBuilding('hub')">
+    <!-- glow base -->
+    <ellipse cx="700" cy="420" rx="90" ry="180" fill="rgba(0,229,255,0.04)" filter="url(#sglow)"/>
+    <!-- wings -->
+    <rect x="628" y="390" width="38" height="110" fill="#030a14" stroke="rgba(0,229,255,0.3)" stroke-width="0.7" rx="2"/>
+    <rect x="734" y="390" width="38" height="110" fill="#030a14" stroke="rgba(0,229,255,0.3)" stroke-width="0.7" rx="2"/>
+    <rect x="634" y="398" width="26" height="4" fill="rgba(0,229,255,0.35)" rx="1"/>
+    <rect x="634" y="409" width="26" height="4" fill="rgba(0,229,255,0.2)" rx="1"/>
+    <rect x="634" y="420" width="26" height="4" fill="rgba(0,229,255,0.35)" rx="1"/>
+    <rect x="740" y="398" width="26" height="4" fill="rgba(0,229,255,0.35)" rx="1"/>
+    <rect x="740" y="409" width="26" height="4" fill="rgba(0,229,255,0.2)" rx="1"/>
+    <rect x="740" y="420" width="26" height="4" fill="rgba(0,229,255,0.35)" rx="1"/>
+    <!-- main tower -->
+    <rect x="656" y="155" width="88" height="345" fill="#020810" stroke="#00e5ff" stroke-width="1.2" rx="2"/>
+    <!-- floors -->
+    <rect x="656" y="155" width="88" height="22" fill="rgba(0,229,255,0.15)"/>
+    <rect x="656" y="195" width="88" height="7" fill="rgba(0,229,255,0.08)"/>
+    <rect x="656" y="222" width="88" height="7" fill="rgba(0,229,255,0.1)"/>
+    <rect x="656" y="249" width="88" height="7" fill="rgba(0,229,255,0.07)"/>
+    <rect x="656" y="276" width="88" height="7" fill="rgba(0,229,255,0.1)"/>
+    <rect x="656" y="303" width="88" height="7" fill="rgba(0,229,255,0.08)"/>
+    <rect x="656" y="330" width="88" height="7" fill="rgba(0,229,255,0.12)"/>
+    <rect x="656" y="357" width="88" height="7" fill="rgba(0,229,255,0.07)"/>
+    <rect x="656" y="384" width="88" height="7" fill="rgba(0,229,255,0.1)"/>
+    <rect x="656" y="411" width="88" height="7" fill="rgba(0,229,255,0.08)"/>
+    <rect x="656" y="438" width="88" height="7" fill="rgba(0,229,255,0.14)"/>
+    <rect x="656" y="465" width="88" height="7" fill="rgba(0,229,255,0.07)"/>
+    <!-- plinth -->
+    <rect x="636" y="498" width="128" height="20" fill="#030810" stroke="rgba(0,229,255,0.4)" stroke-width="0.8" rx="1"/>
+    <!-- spire -->
+    <polygon points="700,102 724,155 676,155" fill="#020810" stroke="#00e5ff" stroke-width="0.9"/>
+    <polygon points="700,82 712,102 688,102" fill="#030f1f" stroke="#00e5ff" stroke-width="0.8"/>
+    <line x1="700" y1="58" x2="700" y2="84" stroke="#00e5ff" stroke-width="1.1"/>
+    <circle cx="700" cy="57" r="4.5" fill="#00e5ff" class="bldg-dot"/>
+    <!-- orbital ring -->
+    <ellipse cx="700" cy="174" rx="28" ry="5" fill="none" stroke="rgba(0,229,255,0.45)" stroke-width="0.8" stroke-dasharray="5,4"/>
+    <ellipse cx="700" cy="174" rx="18" ry="3" fill="none" stroke="rgba(0,229,255,0.25)" stroke-width="0.5"/>
+    <!-- plaza -->
+    <circle cx="700" cy="532" r="48" fill="none" stroke="rgba(0,229,255,0.12)" stroke-width="0.8" stroke-dasharray="7,5"/>
+    <circle cx="700" cy="532" r="32" fill="rgba(0,229,255,0.025)" stroke="rgba(0,229,255,0.07)" stroke-width="0.5"/>
+    <text x="700" y="536" font-family="Orbitron" font-size="6" fill="rgba(0,229,255,0.35)" text-anchor="middle" letter-spacing="2">NEXUS PLAZA</text>
+    <!-- label -->
+    <text x="700" y="540" font-family="Orbitron" font-size="9.5" fill="#00e5ff" text-anchor="middle" font-weight="700" letter-spacing="0.12em">TAMZ COMMAND</text>
+    <text x="700" y="552" class="bldg-sublabel" text-anchor="middle" fill="#4dd0e1" font-size="6.5">NEXUS HUB · ALL TOOLS</text>
+   </g>
+
+   <!-- ═══════════════════════════════════ -->
+   <!-- SYSTEMS QUARTER -->
+
+   <!-- Computer Networks -->
+   <g class="bldg-group" data-id="cn" onclick="openBuilding('cn')">
+    <rect x="784" y="90" width="70" height="126" fill="#001a16" stroke="#64ffda" stroke-width="0.8" rx="2"/>
+    <path d="M784,90 Q819,70 854,90" fill="none" stroke="#64ffda" stroke-width="0.7"/>
+    <rect x="791" y="98" width="11" height="7" fill="rgba(100,255,218,0.45)" rx="1"/>
+    <rect x="808" y="98" width="11" height="7" fill="rgba(100,255,218,0.3)" rx="1"/>
+    <rect x="825" y="98" width="21" height="7" fill="rgba(100,255,218,0.5)" rx="1"/>
+    <rect x="791" y="112" width="11" height="7" fill="rgba(100,255,218,0.2)" rx="1"/>
+    <rect x="808" y="112" width="11" height="7" fill="rgba(100,255,218,0.55)" rx="1"/>
+    <rect x="825" y="112" width="21" height="7" fill="rgba(100,255,218,0.3)" rx="1"/>
+    <rect x="791" y="126" width="11" height="7" fill="rgba(100,255,218,0.5)" rx="1"/>
+    <rect x="808" y="126" width="11" height="7" fill="rgba(100,255,218,0.2)" rx="1"/>
+    <rect x="825" y="126" width="21" height="7" fill="rgba(100,255,218,0.45)" rx="1"/>
+    <rect x="791" y="140" width="11" height="7" fill="rgba(100,255,218,0.3)" rx="1"/>
+    <rect x="808" y="140" width="11" height="7" fill="rgba(100,255,218,0.5)" rx="1"/>
+    <rect x="825" y="140" width="21" height="7" fill="rgba(100,255,218,0.2)" rx="1"/>
+    <rect x="791" y="154" width="11" height="7" fill="rgba(100,255,218,0.45)" rx="1"/>
+    <rect x="808" y="154" width="11" height="7" fill="rgba(100,255,218,0.3)" rx="1"/>
+    <rect x="825" y="154" width="21" height="7" fill="rgba(100,255,218,0.55)" rx="1"/>
+    <text x="819" y="232" class="bldg-label" text-anchor="middle" fill="#64ffda">COMP NETS</text>
+    <text x="819" y="241" class="bldg-sublabel" text-anchor="middle" fill="#80cbc4">SYSTEMS · PH3</text>
+   </g>
+
+   <!-- COA Fortress -->
+   <g class="bldg-group" data-id="coa" onclick="openBuilding('coa')">
+    <rect x="895" y="88" width="64" height="128" fill="#1a0404" stroke="#ff5252" stroke-width="0.8" rx="2"/>
+    <rect x="895" y="76" width="11" height="14" fill="#140303" stroke="#ff5252" stroke-width="0.5" rx="1"/>
+    <rect x="912" y="76" width="11" height="14" fill="#140303" stroke="#ff5252" stroke-width="0.5" rx="1"/>
+    <rect x="929" y="76" width="11" height="14" fill="#140303" stroke="#ff5252" stroke-width="0.5" rx="1"/>
+    <rect x="946" y="76" width="11" height="14" fill="#140303" stroke="#ff5252" stroke-width="0.5" rx="1"/>
+    <rect x="902" y="96" width="10" height="8" fill="rgba(255,82,82,0.45)" rx="1"/>
+    <rect x="918" y="96" width="10" height="8" fill="rgba(255,82,82,0.6)" rx="1"/>
+    <rect x="934" y="96" width="17" height="8" fill="rgba(255,82,82,0.3)" rx="1"/>
+    <rect x="902" y="111" width="10" height="8" fill="rgba(255,82,82,0.55)" rx="1"/>
+    <rect x="918" y="111" width="10" height="8" fill="rgba(255,82,82,0.25)" rx="1"/>
+    <rect x="934" y="111" width="17" height="8" fill="rgba(255,82,82,0.5)" rx="1"/>
+    <rect x="902" y="126" width="10" height="8" fill="rgba(255,82,82,0.2)" rx="1"/>
+    <rect x="918" y="126" width="10" height="8" fill="rgba(255,82,82,0.5)" rx="1"/>
+    <rect x="934" y="126" width="17" height="8" fill="rgba(255,82,82,0.4)" rx="1"/>
+    <rect x="902" y="141" width="10" height="8" fill="rgba(255,82,82,0.45)" rx="1"/>
+    <rect x="918" y="141" width="10" height="8" fill="rgba(255,82,82,0.3)" rx="1"/>
+    <rect x="934" y="141" width="17" height="8" fill="rgba(255,82,82,0.55)" rx="1"/>
+    <text x="927" y="232" class="bldg-label" text-anchor="middle" fill="#ff5252">COA</text>
+    <text x="927" y="241" class="bldg-sublabel" text-anchor="middle" fill="#ef9a9a">HARDWARE · PH4</text>
+   </g>
+
+   <!-- Digital Logic -->
+   <g class="bldg-group" data-id="dl" onclick="openBuilding('dl')">
+    <rect x="1005" y="96" width="56" height="120" fill="#1a0410" stroke="#ff80ab" stroke-width="0.8" rx="2"/>
+    <rect x="1005" y="84" width="56" height="14" fill="#14030d" stroke="#ff80ab" stroke-width="0.6" rx="2"/>
+    <circle cx="1033" cy="77" r="3" fill="#ff80ab" class="bldg-dot"/>
+    <line x1="1033" y1="80" x2="1033" y2="84" stroke="#ff80ab" stroke-width="0.8"/>
+    <rect x="1013" y="103" width="40" height="4" fill="rgba(255,128,171,0.45)" rx="1"/>
+    <rect x="1013" y="113" width="40" height="4" fill="rgba(255,128,171,0.25)" rx="1"/>
+    <rect x="1013" y="123" width="40" height="4" fill="rgba(255,128,171,0.5)" rx="1"/>
+    <rect x="1013" y="133" width="40" height="4" fill="rgba(255,128,171,0.3)" rx="1"/>
+    <rect x="1013" y="143" width="40" height="4" fill="rgba(255,128,171,0.5)" rx="1"/>
+    <rect x="1013" y="153" width="40" height="4" fill="rgba(255,128,171,0.2)" rx="1"/>
+    <rect x="1013" y="163" width="40" height="4" fill="rgba(255,128,171,0.4)" rx="1"/>
+    <text x="1033" y="232" class="bldg-label" text-anchor="middle" fill="#ff80ab">DIGITAL LOGIC</text>
+    <text x="1033" y="241" class="bldg-sublabel" text-anchor="middle" fill="#f48fb1">HARDWARE · PH4</text>
+   </g>
+
+   <!-- Compiler Design -->
+   <g class="bldg-group" data-id="cd" onclick="openBuilding('cd')">
+    <rect x="1108" y="100" width="56" height="116" fill="#1a0800" stroke="#ff9100" stroke-width="0.8" rx="2"/>
+    <polygon points="1136,84 1164,100 1108,100" fill="#140600" stroke="#ff9100" stroke-width="0.7"/>
+    <rect x="1115" y="108" width="42" height="5" fill="rgba(255,145,0,0.4)" rx="1"/>
+    <rect x="1115" y="120" width="42" height="5" fill="rgba(255,145,0,0.25)" rx="1"/>
+    <rect x="1115" y="132" width="42" height="5" fill="rgba(255,145,0,0.45)" rx="1"/>
+    <rect x="1115" y="144" width="42" height="5" fill="rgba(255,145,0,0.3)" rx="1"/>
+    <rect x="1115" y="156" width="42" height="5" fill="rgba(255,145,0,0.5)" rx="1"/>
+    <rect x="1115" y="168" width="42" height="5" fill="rgba(255,145,0,0.2)" rx="1"/>
+    <text x="1136" y="232" class="bldg-label" text-anchor="middle" fill="#ff9100">COMPILER</text>
+    <text x="1136" y="241" class="bldg-sublabel" text-anchor="middle" fill="#ffcc02">THEORY · PH4</text>
+   </g>
+
+   <!-- ═══════════════════════════════════ -->
+   <!-- MATH CITADEL -->
+
+   <!-- Discrete Math observatory dome -->
+   <g class="bldg-group" data-id="dm" onclick="openBuilding('dm')">
+    <rect x="50" y="640" width="70" height="90" fill="#100c00" stroke="#ffb300" stroke-width="0.8" rx="2"/>
+    <path d="M50,640 Q85,612 120,640" fill="#0c0900" stroke="#ffb300" stroke-width="0.8" fill-rule="evenodd"/>
+    <rect x="58" y="650" width="11" height="8" fill="rgba(255,179,0,0.5)" rx="1"/>
+    <rect x="76" y="650" width="11" height="8" fill="rgba(255,179,0,0.3)" rx="1"/>
+    <rect x="94" y="650" width="18" height="8" fill="rgba(255,179,0,0.5)" rx="1"/>
+    <rect x="58" y="665" width="11" height="8" fill="rgba(255,179,0,0.2)" rx="1"/>
+    <rect x="76" y="665" width="11" height="8" fill="rgba(255,179,0,0.45)" rx="1"/>
+    <rect x="94" y="665" width="18" height="8" fill="rgba(255,179,0,0.3)" rx="1"/>
+    <rect x="58" y="680" width="11" height="8" fill="rgba(255,179,0,0.4)" rx="1"/>
+    <rect x="76" y="680" width="11" height="8" fill="rgba(255,179,0,0.2)" rx="1"/>
+    <rect x="94" y="680" width="18" height="8" fill="rgba(255,179,0,0.5)" rx="1"/>
+    <text x="85" y="752" class="bldg-label" text-anchor="middle" fill="#ffb300">DISCRETE MATH</text>
+    <text x="85" y="761" class="bldg-sublabel" text-anchor="middle" fill="#ffd54f">FOUNDATION</text>
+   </g>
+
+   <!-- Linear Algebra tower -->
+   <g class="bldg-group" data-id="la" onclick="openBuilding('la')">
+    <rect x="170" y="600" width="52" height="130" fill="#040e18" stroke="#039be5" stroke-width="0.8" rx="2"/>
+    <rect x="178" y="608" width="36" height="5" fill="rgba(3,155,229,0.5)" rx="1"/>
+    <rect x="178" y="619" width="36" height="5" fill="rgba(3,155,229,0.3)" rx="1"/>
+    <rect x="178" y="630" width="36" height="5" fill="rgba(3,155,229,0.5)" rx="1"/>
+    <rect x="178" y="641" width="36" height="5" fill="rgba(3,155,229,0.2)" rx="1"/>
+    <rect x="178" y="652" width="36" height="5" fill="rgba(3,155,229,0.45)" rx="1"/>
+    <rect x="178" y="663" width="36" height="5" fill="rgba(3,155,229,0.3)" rx="1"/>
+    <rect x="178" y="674" width="36" height="5" fill="rgba(3,155,229,0.5)" rx="1"/>
+    <rect x="178" y="685" width="36" height="5" fill="rgba(3,155,229,0.2)" rx="1"/>
+    <text x="196" y="752" class="bldg-label" text-anchor="middle" fill="#039be5">LINEAR ALG</text>
+    <text x="196" y="761" class="bldg-sublabel" text-anchor="middle" fill="#81d4fa">FOUNDATION</text>
+   </g>
+
+   <!-- Probability Station -->
+   <g class="bldg-group" data-id="prob" onclick="openBuilding('prob')">
+    <rect x="262" y="606" width="58" height="124" fill="#14040a" stroke="#e91e63" stroke-width="0.8" rx="2"/>
+    <polygon points="291,590 320,606 262,606" fill="#10030a" stroke="#e91e63" stroke-width="0.7"/>
+    <rect x="269" y="614" width="44" height="5" fill="rgba(233,30,99,0.45)" rx="1"/>
+    <rect x="269" y="625" width="44" height="5" fill="rgba(233,30,99,0.25)" rx="1"/>
+    <rect x="269" y="636" width="44" height="5" fill="rgba(233,30,99,0.5)" rx="1"/>
+    <rect x="269" y="647" width="44" height="5" fill="rgba(233,30,99,0.3)" rx="1"/>
+    <rect x="269" y="658" width="44" height="5" fill="rgba(233,30,99,0.5)" rx="1"/>
+    <rect x="269" y="669" width="44" height="5" fill="rgba(233,30,99,0.2)" rx="1"/>
+    <rect x="269" y="680" width="44" height="5" fill="rgba(233,30,99,0.4)" rx="1"/>
+    <text x="291" y="752" class="bldg-label" text-anchor="middle" fill="#e91e63">PROBABILITY</text>
+    <text x="291" y="761" class="bldg-sublabel" text-anchor="middle" fill="#f06292">FOUNDATION</text>
+   </g>
+
+   <!-- General Aptitude -->
+   <g class="bldg-group" data-id="apt" onclick="openBuilding('apt')">
+    <rect x="368" y="610" width="54" height="118" fill="#041200" stroke="#4caf50" stroke-width="0.8" rx="2"/>
+    <rect x="368" y="598" width="54" height="14" fill="#031000" stroke="#4caf50" stroke-width="0.6" rx="2"/>
+    <rect x="375" y="618" width="40" height="4" fill="rgba(76,175,80,0.45)" rx="1"/>
+    <rect x="375" y="628" width="40" height="4" fill="rgba(76,175,80,0.25)" rx="1"/>
+    <rect x="375" y="638" width="40" height="4" fill="rgba(76,175,80,0.45)" rx="1"/>
+    <rect x="375" y="648" width="40" height="4" fill="rgba(76,175,80,0.3)" rx="1"/>
+    <rect x="375" y="658" width="40" height="4" fill="rgba(76,175,80,0.5)" rx="1"/>
+    <rect x="375" y="668" width="40" height="4" fill="rgba(76,175,80,0.2)" rx="1"/>
+    <rect x="375" y="678" width="40" height="4" fill="rgba(76,175,80,0.4)" rx="1"/>
+    <text x="395" y="752" class="bldg-label" text-anchor="middle" fill="#4caf50">GEN APTITUDE</text>
+    <text x="395" y="761" class="bldg-sublabel" text-anchor="middle" fill="#81c784">15 MARKS/YR</text>
+   </g>
+
+   <!-- Engineering Maths -->
+   <g class="bldg-group" data-id="engm" onclick="openBuilding('engm')">
+    <rect x="468" y="608" width="60" height="122" fill="#141200" stroke="#fdd835" stroke-width="0.8" rx="2"/>
+    <rect x="476" y="616" width="44" height="5" fill="rgba(253,216,53,0.45)" rx="1"/>
+    <rect x="476" y="627" width="44" height="5" fill="rgba(253,216,53,0.25)" rx="1"/>
+    <rect x="476" y="638" width="44" height="5" fill="rgba(253,216,53,0.45)" rx="1"/>
+    <rect x="476" y="649" width="44" height="5" fill="rgba(253,216,53,0.3)" rx="1"/>
+    <rect x="476" y="660" width="44" height="5" fill="rgba(253,216,53,0.5)" rx="1"/>
+    <rect x="476" y="671" width="44" height="5" fill="rgba(253,216,53,0.2)" rx="1"/>
+    <rect x="476" y="682" width="44" height="5" fill="rgba(253,216,53,0.4)" rx="1"/>
+    <text x="498" y="752" class="bldg-label" text-anchor="middle" fill="#fdd835">ENG MATHS</text>
+    <text x="498" y="761" class="bldg-sublabel" text-anchor="middle" fill="#fff176">FOUNDATION</text>
+   </g>
+
+   <!-- ═══════════════════════════════════ -->
+   <!-- THEORY NEXUS -->
+
+   <!-- TOC Pyramid -->
+   <g class="bldg-group" data-id="toc" onclick="openBuilding('toc')">
+    <polygon points="798,588 862,750 734,750" fill="#0a0320" stroke="#b388ff" stroke-width="0.9"/>
+    <circle cx="798" cy="580" r="4" fill="#b388ff" class="bldg-dot"/>
+    <rect x="774" y="648" width="11" height="7" fill="rgba(179,136,255,0.5)" rx="1"/>
+    <rect x="792" y="648" width="11" height="7" fill="rgba(179,136,255,0.3)" rx="1"/>
+    <rect x="810" y="648" width="10" height="7" fill="rgba(179,136,255,0.5)" rx="1"/>
+    <rect x="779" y="664" width="10" height="7" fill="rgba(179,136,255,0.4)" rx="1"/>
+    <rect x="796" y="664" width="10" height="7" fill="rgba(179,136,255,0.2)" rx="1"/>
+    <rect x="784" y="680" width="9" height="7" fill="rgba(179,136,255,0.45)" rx="1"/>
+    <rect x="800" y="680" width="9" height="7" fill="rgba(179,136,255,0.3)" rx="1"/>
+    <text x="798" y="768" class="bldg-label" text-anchor="middle" fill="#b388ff">THEORY OF COMP</text>
+    <text x="798" y="777" class="bldg-sublabel" text-anchor="middle" fill="#ce93d8">THEORY · PH3</text>
+   </g>
+
+   <!-- GATE Intelligence dome-cylinder -->
+   <g class="bldg-group" data-id="gateiq" onclick="openBuilding('gateiq')">
+    <rect x="898" y="636" width="72" height="114" fill="#030c14" stroke="#00e5ff" stroke-width="1" rx="2"/>
+    <ellipse cx="934" cy="636" rx="36" ry="8" fill="#030c14" stroke="#00e5ff" stroke-width="1"/>
+    <ellipse cx="934" cy="636" rx="28" ry="5.5" fill="rgba(0,229,255,0.1)"/>
+    <line x1="934" y1="584" x2="934" y2="628" stroke="#00e5ff" stroke-width="0.9"/>
+    <circle cx="934" cy="583" r="3.5" fill="#00e5ff" class="bldg-dot"/>
+    <rect x="905" y="645" width="11" height="6" fill="rgba(0,229,255,0.45)" rx="1"/>
+    <rect x="922" y="645" width="11" height="6" fill="rgba(0,229,255,0.3)" rx="1"/>
+    <rect x="939" y="645" width="11" height="6" fill="rgba(0,229,255,0.5)" rx="1"/>
+    <rect x="956" y="645" width="6" height="6" fill="rgba(0,229,255,0.2)" rx="1"/>
+    <rect x="905" y="658" width="11" height="6" fill="rgba(0,229,255,0.3)" rx="1"/>
+    <rect x="922" y="658" width="11" height="6" fill="rgba(0,229,255,0.5)" rx="1"/>
+    <rect x="939" y="658" width="11" height="6" fill="rgba(0,229,255,0.2)" rx="1"/>
+    <rect x="956" y="658" width="6" height="6" fill="rgba(0,229,255,0.4)" rx="1"/>
+    <rect x="905" y="671" width="11" height="6" fill="rgba(0,229,255,0.5)" rx="1"/>
+    <rect x="922" y="671" width="11" height="6" fill="rgba(0,229,255,0.2)" rx="1"/>
+    <rect x="939" y="671" width="11" height="6" fill="rgba(0,229,255,0.45)" rx="1"/>
+    <rect x="956" y="671" width="6" height="6" fill="rgba(0,229,255,0.3)" rx="1"/>
+    <text x="934" y="768" class="bldg-label" text-anchor="middle" fill="#00e5ff">GATE IQ</text>
+    <text x="934" y="777" class="bldg-sublabel" text-anchor="middle" fill="#80deea">1492 PYQs</text>
+   </g>
+
+   <!-- AI Tutor arcology stepped -->
+   <g class="bldg-group" data-id="ai" onclick="openBuilding('ai')">
+    <rect x="1022" y="598" width="72" height="152" fill="#120010" stroke="#ff80ab" stroke-width="1" rx="2"/>
+    <rect x="1022" y="585" width="72" height="15" fill="#0e000d" stroke="#ff80ab" stroke-width="0.7" rx="1"/>
+    <rect x="1028" y="573" width="60" height="14" fill="#0e000d" stroke="#ff80ab" stroke-width="0.6" rx="1"/>
+    <rect x="1034" y="562" width="48" height="13" fill="#0e000d" stroke="#ff80ab" stroke-width="0.5" rx="1"/>
+    <rect x="1030" y="606" width="11" height="7" fill="rgba(255,128,171,0.5)" rx="1"/>
+    <rect x="1047" y="606" width="11" height="7" fill="rgba(255,128,171,0.3)" rx="1"/>
+    <rect x="1064" y="606" width="22" height="7" fill="rgba(255,128,171,0.5)" rx="1"/>
+    <rect x="1030" y="620" width="11" height="7" fill="rgba(255,128,171,0.2)" rx="1"/>
+    <rect x="1047" y="620" width="11" height="7" fill="rgba(255,128,171,0.5)" rx="1"/>
+    <rect x="1064" y="620" width="22" height="7" fill="rgba(255,128,171,0.3)" rx="1"/>
+    <rect x="1030" y="634" width="11" height="7" fill="rgba(255,128,171,0.45)" rx="1"/>
+    <rect x="1047" y="634" width="11" height="7" fill="rgba(255,128,171,0.25)" rx="1"/>
+    <rect x="1064" y="634" width="22" height="7" fill="rgba(255,128,171,0.5)" rx="1"/>
+    <rect x="1030" y="648" width="11" height="7" fill="rgba(255,128,171,0.3)" rx="1"/>
+    <rect x="1047" y="648" width="11" height="7" fill="rgba(255,128,171,0.5)" rx="1"/>
+    <rect x="1064" y="648" width="22" height="7" fill="rgba(255,128,171,0.2)" rx="1"/>
+    <text x="1058" y="768" class="bldg-label" text-anchor="middle" fill="#ff80ab">AI TUTOR</text>
+    <text x="1058" y="777" class="bldg-sublabel" text-anchor="middle" fill="#f48fb1">BM25 · SEMANTIC</text>
+   </g>
+
+   <!-- Trend Analysis Observatory -->
+   <g class="bldg-group" data-id="trend" onclick="openBuilding('trend')">
+    <rect x="1152" y="600" width="58" height="150" fill="#001812" stroke="#00bfa5" stroke-width="0.8" rx="2"/>
+    <rect x="1152" y="588" width="58" height="14" fill="#001410" stroke="#00bfa5" stroke-width="0.6" rx="2"/>
+    <circle cx="1181" cy="580" r="3" fill="#00bfa5" class="bldg-dot"/>
+    <line x1="1181" y1="583" x2="1181" y2="588" stroke="#00bfa5" stroke-width="0.8"/>
+    <rect x="1159" y="606" width="44" height="4" fill="rgba(0,191,165,0.45)" rx="1"/>
+    <rect x="1159" y="617" width="44" height="4" fill="rgba(0,191,165,0.25)" rx="1"/>
+    <rect x="1159" y="628" width="44" height="4" fill="rgba(0,191,165,0.5)" rx="1"/>
+    <rect x="1159" y="639" width="44" height="4" fill="rgba(0,191,165,0.3)" rx="1"/>
+    <rect x="1159" y="650" width="44" height="4" fill="rgba(0,191,165,0.5)" rx="1"/>
+    <rect x="1159" y="661" width="44" height="4" fill="rgba(0,191,165,0.2)" rx="1"/>
+    <rect x="1159" y="672" width="44" height="4" fill="rgba(0,191,165,0.45)" rx="1"/>
+    <rect x="1159" y="683" width="44" height="4" fill="rgba(0,191,165,0.3)" rx="1"/>
+    <text x="1181" y="768" class="bldg-label" text-anchor="middle" fill="#00bfa5">TRENDS</text>
+    <text x="1181" y="777" class="bldg-sublabel" text-anchor="middle" fill="#80cbc4">1492 QS · 12YR</text>
+   </g>
+
+   <!-- ═══════════════════════════════════ -->
+   <!-- SIMULATION HARBOR -->
+   <!-- CBT Simulator -->
+   <g class="bldg-group" data-id="cbt" onclick="openBuilding('cbt')">
+    <rect x="48" y="858" width="170" height="90" fill="#020b14" stroke="#00e5ff" stroke-width="1" rx="2"/>
+    <rect x="56" y="866" width="58" height="38" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.22)" stroke-width="0.5" rx="2"/>
+    <rect x="60" y="870" width="38" height="2" fill="rgba(0,229,255,0.5)" rx="1"/>
+    <rect x="60" y="875" width="28" height="2" fill="rgba(0,229,255,0.3)" rx="1"/>
+    <rect x="60" y="880" width="42" height="2" fill="rgba(0,229,255,0.4)" rx="1"/>
+    <rect x="60" y="885" width="22" height="2" fill="rgba(0,229,255,0.25)" rx="1"/>
+    <rect x="60" y="890" width="34" height="2" fill="rgba(0,229,255,0.45)" rx="1"/>
+    <rect x="60" y="895" width="18" height="2" fill="rgba(0,229,255,0.2)" rx="1"/>
+    <rect x="124" y="866" width="86" height="18" fill="rgba(0,229,255,0.08)" rx="2"/>
+    <text x="167" y="877" font-family="Space Mono" font-size="5.5" fill="rgba(0,229,255,0.55)" text-anchor="middle">GATE CBT LIVE</text>
+    <rect x="124" y="890" width="38" height="10" fill="rgba(0,230,118,0.12)" rx="2"/>
+    <text x="143" y="897" font-family="Space Mono" font-size="5" fill="#00e676" text-anchor="middle">65 QS</text>
+    <rect x="168" y="890" width="42" height="10" fill="rgba(255,179,0,0.12)" rx="2"/>
+    <text x="189" y="897" font-family="Space Mono" font-size="5" fill="#ffb300" text-anchor="middle">180 MIN</text>
+    <text x="133" y="963" class="bldg-label" text-anchor="middle" fill="#00e5ff">GATE CBT SIMULATOR</text>
+    <text x="133" y="972" class="bldg-sublabel" text-anchor="middle" fill="#80deea">FULL PAPER · 65 QS</text>
+   </g>
+
+   <!-- Roadmap -->
+   <g class="bldg-group" data-id="roadmap" onclick="openBuilding('roadmap')">
+    <rect x="248" y="855" width="118" height="98" fill="#140c00" stroke="#ffb300" stroke-width="1" rx="2"/>
+    <rect x="256" y="863" width="102" height="55" fill="rgba(255,179,0,0.05)" stroke="rgba(255,179,0,0.18)" stroke-width="0.5" rx="2"/>
+    <rect x="261" y="867" width="66" height="2" fill="rgba(255,179,0,0.45)" rx="1"/>
+    <rect x="261" y="873" width="48" height="2" fill="rgba(255,179,0,0.3)" rx="1"/>
+    <rect x="261" y="879" width="58" height="2" fill="rgba(255,179,0,0.45)" rx="1"/>
+    <rect x="261" y="885" width="38" height="2" fill="rgba(255,179,0,0.25)" rx="1"/>
+    <rect x="261" y="891" width="52" height="2" fill="rgba(255,179,0,0.45)" rx="1"/>
+    <rect x="261" y="897" width="44" height="2" fill="rgba(255,179,0,0.3)" rx="1"/>
+    <rect x="261" y="903" width="60" height="2" fill="rgba(255,179,0,0.4)" rx="1"/>
+    <rect x="261" y="909" width="34" height="2" fill="rgba(255,179,0,0.2)" rx="1"/>
+    <text x="307" y="967" class="bldg-label" text-anchor="middle" fill="#ffb300">ROADMAP</text>
+    <text x="307" y="976" class="bldg-sublabel" text-anchor="middle" fill="#ffd54f">W1–W35 · 5 PHASES</text>
+   </g>
+
+   <!-- DSA Bank -->
+   <g class="bldg-group" data-id="dsa" onclick="openBuilding('dsa')">
+    <rect x="398" y="858" width="98" height="94" fill="#061200" stroke="#00e676" stroke-width="1" rx="2"/>
+    <rect x="406" y="866" width="82" height="45" fill="rgba(0,230,118,0.05)" stroke="rgba(0,230,118,0.18)" stroke-width="0.5" rx="2"/>
+    <rect x="411" y="870" width="28" height="2" fill="rgba(0,230,118,0.5)" rx="1"/>
+    <rect x="411" y="876" width="48" height="2" fill="rgba(0,230,118,0.3)" rx="1"/>
+    <rect x="411" y="882" width="38" height="2" fill="rgba(0,230,118,0.45)" rx="1"/>
+    <rect x="411" y="888" width="54" height="2" fill="rgba(0,230,118,0.3)" rx="1"/>
+    <rect x="411" y="894" width="34" height="2" fill="rgba(0,230,118,0.5)" rx="1"/>
+    <rect x="411" y="900" width="44" height="2" fill="rgba(0,230,118,0.2)" rx="1"/>
+    <text x="447" y="967" class="bldg-label" text-anchor="middle" fill="#00e676">DSA BANK</text>
+    <text x="447" y="976" class="bldg-sublabel" text-anchor="middle" fill="#69f0ae">260+ PROBLEMS</text>
+   </g>
+
+   <!-- PYQ Bank -->
+   <g class="bldg-group" data-id="pyq" onclick="openBuilding('pyq')">
+    <rect x="526" y="855" width="98" height="98" fill="#0c0020" stroke="#7c4dff" stroke-width="1" rx="2"/>
+    <rect x="534" y="863" width="82" height="45" fill="rgba(124,77,255,0.05)" stroke="rgba(124,77,255,0.18)" stroke-width="0.5" rx="2"/>
+    <rect x="539" y="867" width="44" height="2" fill="rgba(124,77,255,0.5)" rx="1"/>
+    <rect x="539" y="873" width="30" height="2" fill="rgba(124,77,255,0.3)" rx="1"/>
+    <rect x="539" y="879" width="50" height="2" fill="rgba(124,77,255,0.45)" rx="1"/>
+    <rect x="539" y="885" width="35" height="2" fill="rgba(124,77,255,0.3)" rx="1"/>
+    <rect x="539" y="891" width="56" height="2" fill="rgba(124,77,255,0.5)" rx="1"/>
+    <rect x="539" y="897" width="40" height="2" fill="rgba(124,77,255,0.2)" rx="1"/>
+    <text x="575" y="967" class="bldg-label" text-anchor="middle" fill="#7c4dff">PYQ BANK</text>
+    <text x="575" y="976" class="bldg-sublabel" text-anchor="middle" fill="#b388ff">21 SUBJ · 2014-25</text>
+   </g>
+
+   <!-- Subject CBT -->
+   <g class="bldg-group" data-id="subcbt" onclick="openBuilding('subcbt')">
+    <rect x="776" y="855" width="116" height="96" fill="#001810" stroke="#64ffda" stroke-width="1" rx="2"/>
+    <rect x="784" y="863" width="100" height="45" fill="rgba(100,255,218,0.04)" stroke="rgba(100,255,218,0.18)" stroke-width="0.5" rx="2"/>
+    <rect x="789" y="867" width="40" height="2" fill="rgba(100,255,218,0.5)" rx="1"/>
+    <rect x="789" y="873" width="62" height="2" fill="rgba(100,255,218,0.3)" rx="1"/>
+    <rect x="789" y="879" width="35" height="2" fill="rgba(100,255,218,0.45)" rx="1"/>
+    <rect x="789" y="885" width="52" height="2" fill="rgba(100,255,218,0.3)" rx="1"/>
+    <rect x="789" y="891" width="45" height="2" fill="rgba(100,255,218,0.5)" rx="1"/>
+    <rect x="789" y="897" width="30" height="2" fill="rgba(100,255,218,0.2)" rx="1"/>
+    <text x="834" y="965" class="bldg-label" text-anchor="middle" fill="#64ffda">SUBJECT CBT</text>
+    <text x="834" y="974" class="bldg-sublabel" text-anchor="middle" fill="#80cbc4">SUBJECT PRACTICE</text>
+   </g>
+
+   <!-- Notes Hub -->
+   <g class="bldg-group" data-id="notes" onclick="openBuilding('notes')">
+    <rect x="924" y="855" width="106" height="96" fill="#020c14" stroke="#03a9f4" stroke-width="1" rx="2"/>
+    <rect x="932" y="863" width="90" height="45" fill="rgba(3,169,244,0.04)" stroke="rgba(3,169,244,0.18)" stroke-width="0.5" rx="2"/>
+    <rect x="937" y="867" width="52" height="2" fill="rgba(3,169,244,0.5)" rx="1"/>
+    <rect x="937" y="873" width="36" height="2" fill="rgba(3,169,244,0.3)" rx="1"/>
+    <rect x="937" y="879" width="56" height="2" fill="rgba(3,169,244,0.45)" rx="1"/>
+    <rect x="937" y="885" width="42" height="2" fill="rgba(3,169,244,0.3)" rx="1"/>
+    <rect x="937" y="891" width="62" height="2" fill="rgba(3,169,244,0.5)" rx="1"/>
+    <rect x="937" y="897" width="30" height="2" fill="rgba(3,169,244,0.2)" rx="1"/>
+    <text x="977" y="965" class="bldg-label" text-anchor="middle" fill="#03a9f4">NOTES HUB</text>
+    <text x="977" y="974" class="bldg-sublabel" text-anchor="middle" fill="#81d4fa">16 SUBJECTS · PDFs</text>
+   </g>
+
+   <!-- CSE Hub -->
+   <g class="bldg-group" data-id="csehub" onclick="openBuilding('csehub')">
+    <rect x="1062" y="855" width="112" height="96" fill="#120800" stroke="#ff6d00" stroke-width="1" rx="2"/>
+    <rect x="1070" y="863" width="96" height="45" fill="rgba(255,109,0,0.04)" stroke="rgba(255,109,0,0.18)" stroke-width="0.5" rx="2"/>
+    <rect x="1075" y="867" width="52" height="2" fill="rgba(255,109,0,0.5)" rx="1"/>
+    <rect x="1075" y="873" width="68" height="2" fill="rgba(255,109,0,0.3)" rx="1"/>
+    <rect x="1075" y="879" width="42" height="2" fill="rgba(255,109,0,0.45)" rx="1"/>
+    <rect x="1075" y="885" width="58" height="2" fill="rgba(255,109,0,0.3)" rx="1"/>
+    <rect x="1075" y="891" width="74" height="2" fill="rgba(255,109,0,0.5)" rx="1"/>
+    <rect x="1075" y="897" width="46" height="2" fill="rgba(255,109,0,0.2)" rx="1"/>
+    <text x="1118" y="965" class="bldg-label" text-anchor="middle" fill="#ff6d00">CSE HUB</text>
+    <text x="1118" y="974" class="bldg-sublabel" text-anchor="middle" fill="#ffcc80">ALL 16 SUBJ · FREE</text>
+   </g>
+
+   <!-- Resource Links -->
+   <g class="bldg-group" data-id="resources" onclick="openBuilding('resources')">
+    <rect x="1206" y="858" width="98" height="92" fill="#140404" stroke="#f44336" stroke-width="1" rx="2"/>
+    <rect x="1214" y="866" width="82" height="40" fill="rgba(244,67,54,0.04)" stroke="rgba(244,67,54,0.18)" stroke-width="0.5" rx="2"/>
+    <rect x="1219" y="870" width="42" height="2" fill="rgba(244,67,54,0.5)" rx="1"/>
+    <rect x="1219" y="876" width="58" height="2" fill="rgba(244,67,54,0.3)" rx="1"/>
+    <rect x="1219" y="882" width="36" height="2" fill="rgba(244,67,54,0.45)" rx="1"/>
+    <rect x="1219" y="888" width="52" height="2" fill="rgba(244,67,54,0.3)" rx="1"/>
+    <rect x="1219" y="894" width="47" height="2" fill="rgba(244,67,54,0.5)" rx="1"/>
+    <text x="1255" y="963" class="bldg-label" text-anchor="middle" fill="#f44336">RESOURCES</text>
+    <text x="1255" y="972" class="bldg-sublabel" text-anchor="middle" fill="#ef9a9a">STRIVER · BARI · GFG</text>
+   </g>
+
+   <!-- Corner intersection dots -->
+   <circle cx="350" cy="530" r="3" fill="rgba(0,229,255,0.5)"/>
+   <circle cx="1050" cy="530" r="3" fill="rgba(0,229,255,0.5)"/>
+   <circle cx="700" cy="270" r="3" fill="rgba(0,229,255,0.5)"/>
+   <circle cx="700" cy="775" r="3" fill="rgba(0,229,255,0.5)"/>
+
+   <!-- VEHICLES (animated) -->
+   <g class="veh" style="animation-delay:0s">
+    <rect x="0" y="522" width="16" height="5" fill="rgba(0,229,255,0.5)" rx="2"/>
+    <rect x="3" y="519" width="10" height="4" fill="rgba(0,229,255,0.3)" rx="1"/>
+    <circle cx="3" cy="527" r="1.8" fill="rgba(0,229,255,0.4)"/>
+    <circle cx="13" cy="527" r="1.8" fill="rgba(0,229,255,0.4)"/>
+   </g>
+   <g class="veh" style="animation-delay:-4.5s">
+    <rect x="0" y="534" width="13" height="4.5" fill="rgba(100,255,218,0.4)" rx="2"/>
+    <circle cx="3" cy="539" r="1.5" fill="rgba(100,255,218,0.5)"/>
+    <circle cx="10" cy="539" r="1.5" fill="rgba(100,255,218,0.5)"/>
+   </g>
+   <g class="veh2" style="animation-delay:-2s">
+    <rect x="0" y="543" width="16" height="5" fill="rgba(255,179,0,0.4)" rx="2"/>
+    <rect x="3" y="540" width="10" height="4" fill="rgba(255,179,0,0.25)" rx="1"/>
+    <circle cx="3" cy="548" r="1.8" fill="rgba(255,179,0,0.4)"/>
+    <circle cx="13" cy="548" r="1.8" fill="rgba(255,179,0,0.4)"/>
+   </g>
+   <g class="veh3" style="animation-delay:0s">
+    <rect x="692" y="0" width="5" height="14" fill="rgba(0,229,255,0.45)" rx="2"/>
+   </g>
+   <g class="veh3" style="animation-delay:-5.5s">
+    <rect x="706" y="0" width="4" height="12" fill="rgba(179,136,255,0.4)" rx="2"/>
+   </g>
+   <g class="veh4" style="animation-delay:-3s">
+    <rect x="694" y="0" width="5" height="14" fill="rgba(100,255,218,0.35)" rx="2"/>
+   </g>
+  </svg>
+ </div>
+</div>
+<!-- ZOOM -->
+<div id="zoom-ctrl">
+ <button class="zoom-btn" onclick="adjustZoom(0.15)">+</button>
+ <button class="zoom-btn" onclick="adjustZoom(-0.15)">−</button>
+ <button class="zoom-btn" onclick="resetZoom()" style="font-size:10px">⌂</button>
+</div>
+
+<!-- LEGEND -->
+<div id="legend">
+ <div class="legend-title">◈ Districts</div>
+ <div class="legend-item" onclick="flyTo('core')"><div class="legend-dot" style="background:#00e676"></div><span class="legend-text">Core District</span></div>
+ <div class="legend-item" onclick="flyTo('systems')"><div class="legend-dot" style="background:#64ffda"></div><span class="legend-text">Systems Quarter</span></div>
+ <div class="legend-item" onclick="flyTo('math')"><div class="legend-dot" style="background:#ffb300"></div><span class="legend-text">Math Citadel</span></div>
+ <div class="legend-item" onclick="flyTo('theory')"><div class="legend-dot" style="background:#b388ff"></div><span class="legend-text">Theory Nexus</span></div>
+ <div class="legend-item" onclick="flyTo('harbor')"><div class="legend-dot" style="background:#00e5ff"></div><span class="legend-text">Simulation Harbor</span></div>
+</div>
+
+<!-- MINIMAP -->
+<div id="minimap">
+ <div class="minimap-label">◈ Minimap</div>
+ <svg viewBox="0 0 1400 1000" width="120" height="86" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1400" height="1000" fill="#080b10"/>
+  <rect x="30" y="55" width="600" height="190" fill="rgba(0,230,118,0.18)" rx="3"/>
+  <rect x="770" y="55" width="600" height="190" fill="rgba(0,229,255,0.18)" rx="3"/>
+  <rect x="30" y="570" width="600" height="195" fill="rgba(255,179,0,0.18)" rx="3"/>
+  <rect x="770" y="570" width="600" height="195" fill="rgba(179,136,255,0.18)" rx="3"/>
+  <rect x="30" y="832" width="1340" height="130" fill="rgba(0,229,255,0.12)" rx="3"/>
+  <rect x="690" y="0" width="20" height="1000" fill="rgba(0,229,255,0.12)"/>
+  <rect x="0" y="520" width="1400" height="20" fill="rgba(0,229,255,0.12)"/>
+  <rect id="mm-vp" x="200" y="100" width="700" height="500" fill="rgba(0,229,255,0.05)" stroke="#00e5ff" stroke-width="8" rx="4"/>
+ </svg>
+</div>
+
+<!-- SIGNAL FEED -->
+<div id="feed">
+ <div class="feed-head"><div style="width:4px;height:4px;border-radius:50%;background:#00e676;box-shadow:0 0 5px #00e676"></div> Intelligence Feed</div>
+ <div id="feed-log"></div>
+</div>
+
+<!-- AI GUIDE -->
+<div id="ai-guide">
+ <button class="ai-close-btn" onclick="document.getElementById('ai-guide').classList.remove('visible')">✕</button>
+ <div class="ai-head">
+  <div class="ai-avatar">⬡</div>
+  <div>
+   <div class="ai-name">NEXUS-AI</div>
+   <div class="ai-status-txt">GATE INTELLIGENCE · ONLINE</div>
+  </div>
+ </div>
+ <div class="ai-text" id="ai-text">Welcome to TAMZ Nexus. Click any building to explore your GATE prep ecosystem.<span class="ai-cursor"></span></div>
+</div>
+
+<!-- TOOLTIP -->
+<div id="tooltip"></div>
+
+<!-- SIDE PANEL -->
+<div id="city-panel">
+ <div class="panel-head">
+  <div class="panel-icon" id="pIcon">⬡</div>
+  <div style="min-width:0">
+   <div class="panel-title" id="pTitle">Building</div>
+   <div class="panel-district" id="pDistrict">District</div>
+  </div>
+  <button class="panel-close" onclick="closePanel()">✕</button>
+ </div>
+ <div class="panel-body">
+  <div class="panel-desc" id="pDesc"></div>
+  <div class="panel-stats" id="pStats"></div>
+  <div class="panel-tags" id="pTags"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;font-size:8px;color:var(--ink3);font-family:var(--mono)">
+   <span>MASTERY</span><span id="pProgPct">0%</span>
+  </div>
+  <div class="prog-bar-wrap"><div class="prog-bar-fill" id="pProg" style="width:0%"></div></div>
+  <a class="panel-cta" id="pCta" href="#" target="_blank">→ ENTER BUILDING</a>
+ </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div id="bottom-nav">
+ <div class="nav-item active" id="nav-city">⬡ City</div>
+ <div class="nav-item" onclick="openModal('hub')">◈ Tools</div>
+ <div class="nav-item" onclick="openModal('phases')">⊕ Phases</div>
+ <div class="nav-item" onclick="openModal('briefing')">⌖ Briefing</div>
+ <div class="nav-item" onclick="document.getElementById('ai-guide').classList.toggle('visible')">❂ AI</div>
+</div>
+
+<!-- MODAL -->
+<div id="modal-overlay" onclick="if(event.target===this)closeModal()">
+ <div id="modal">
+  <div class="modal-head">
+   <div class="modal-icon" id="mIcon">⬡</div>
+   <div>
+    <div class="modal-title" id="mTitle">Title</div>
+    <div class="modal-sub" id="mSub">sub</div>
+   </div>
+   <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+  <div class="modal-body" id="mBody"></div>
+ </div>
+</div>
+
+<!-- COMMAND PALETTE -->
+<div id="cpBackdrop">
+ <div class="cp-modal">
+  <div class="cp-row">
+   <span style="color:var(--ink3);font-size:14px">⌕</span>
+   <input id="cpInput" placeholder="Search buildings, subjects, tools…" autocomplete="off" spellcheck="false">
+   <span class="cp-esc">ESC</span>
+  </div>
+  <div id="cpResults"></div>
+  <div class="cp-footer">
+   <span class="cp-hint"><kbd>↑↓</kbd> nav</span>
+   <span class="cp-hint"><kbd>↵</kbd> open</span>
+   <span class="cp-hint"><kbd>esc</kbd> close</span>
+  </div>
+ </div>
+</div>
+
+<script>
+const BDATA = {
+ ds:{icon:'⬡',c:'#00e676',bg:'rgba(0,230,118,0.12)',title:'Data Structures',dist:'Core District · Phase 1-2',desc:'Arrays, Linked Lists, Stacks, Queues, Trees, Graphs, Heaps, Hash Tables. Structural backbone of every algorithm problem. Highest GATE weightage.',stats:[{n:'15+',l:'Topics'},{n:'High',l:'Weight'},{n:'Phase 1',l:'Focus'}],tags:['Core','PYQ Heavy','Trees','Graphs'],url:'https://gatenote.vercel.app/',prog:75},
+ algo:{icon:'◈',c:'#00e5ff',bg:'rgba(0,229,255,0.12)',title:'Algorithms',dist:'Core District · Phase 1-2',desc:'Sorting, Searching, DP, Greedy, Divide & Conquer, Graph Algorithms, Complexity. The engine of problem solving for GATE and placements.',stats:[{n:'18+',l:'Topics'},{n:'High',l:'Weight'},{n:'Phase 2',l:'Focus'}],tags:['Core','DP','Graphs','Complexity'],url:'https://gatenote.vercel.app/',prog:65},
+ os:{icon:'⌖',c:'#ffb300',bg:'rgba(255,179,0,0.12)',title:'Operating Systems',dist:'Systems Quarter · Phase 2',desc:'Process Management, Synchronization, Deadlocks, Memory Management, File Systems. Consistent 8-10 marks per GATE paper every year.',stats:[{n:'8-10',l:'Marks/Yr'},{n:'12',l:'Topics'},{n:'Phase 2',l:'Focus'}],tags:['Systems','Deadlocks','Memory','Scheduling'],url:'https://gatenote.vercel.app/',prog:55},
+ cprog:{icon:'⟨⟩',c:'#64ffda',bg:'rgba(100,255,218,0.12)',title:'C Programming',dist:'Core District · Phase 1',desc:'Pointers, Functions, Arrays, Structures, Dynamic Memory, File I/O. Essential for both GATE and placements. Master pointers early.',stats:[{n:'5-8',l:'Marks/Yr'},{n:'8',l:'Topics'},{n:'Phase 1',l:'Focus'}],tags:['Core','Pointers','Placement','Arrays'],url:'https://gatenote.vercel.app/',prog:80},
+ dbms:{icon:'⬟',c:'#b388ff',bg:'rgba(179,136,255,0.12)',title:'DBMS',dist:'Systems Quarter · Phase 2',desc:'Relational Model, SQL, Normalization, Transactions, Indexing. Rising trend — SQL heavy in 2024-2025 papers. Critical for placements.',stats:[{n:'8-12',l:'Marks/Yr'},{n:'Rising ↑',l:'Trend'},{n:'Phase 2',l:'Focus'}],tags:['Systems','SQL','Normalization','Rising'],url:'https://gatenote.vercel.app/',prog:50},
+ cn:{icon:'⊕',c:'#64ffda',bg:'rgba(100,255,218,0.12)',title:'Computer Networks',dist:'Systems Quarter · Phase 3',desc:'OSI/TCP-IP, Data Link, Network Layer, Transport, Application Protocols, Security. Requires mathematical depth. Study OSI/TCP together.',stats:[{n:'8-10',l:'Marks/Yr'},{n:'10',l:'Topics'},{n:'Phase 3',l:'Focus'}],tags:['Systems','TCP/IP','Protocols','Security'],url:'https://gatenote.vercel.app/',prog:40},
+ coa:{icon:'⚙',c:'#ff5252',bg:'rgba(255,82,82,0.12)',title:'Computer Org & Arch',dist:'Systems Quarter · Phase 4',desc:'Number Systems, Boolean Algebra, CPU Design, Memory Hierarchy, Pipelining, I/O Organization. Hardware meets software.',stats:[{n:'7-9',l:'Marks/Yr'},{n:'12',l:'Topics'},{n:'Phase 4',l:'Focus'}],tags:['Hardware','Pipeline','Memory','COA'],url:'https://gatenote.vercel.app/',prog:30},
+ dl:{icon:'⊞',c:'#ff80ab',bg:'rgba(255,128,171,0.12)',title:'Digital Logic',dist:'Systems Quarter · Phase 4',desc:'Logic Gates, Combinational & Sequential Circuits, Flip-Flops, Counters, K-Maps, FSMs. Foundation for Computer Architecture.',stats:[{n:'5-7',l:'Marks/Yr'},{n:'8',l:'Topics'},{n:'Phase 4',l:'Focus'}],tags:['Hardware','K-Maps','Circuits','FSMs'],url:'https://gatenote.vercel.app/',prog:35},
+ cd:{icon:'⊳',c:'#ff9100',bg:'rgba(255,145,0,0.12)',title:'Compiler Design',dist:'Theory Nexus · Phase 4',desc:'Lexical Analysis, Parsing (LL/LR), Syntax-Directed Translation, Runtime Environments, Code Generation & Optimization.',stats:[{n:'5-7',l:'Marks/Yr'},{n:'8',l:'Topics'},{n:'Phase 4',l:'Focus'}],tags:['Theory','Parsing','Lexical','LR'],url:'https://gatenote.vercel.app/',prog:25},
+ dm:{icon:'∑',c:'#ffb300',bg:'rgba(255,179,0,0.12)',title:'Discrete Mathematics',dist:'Math Citadel · Foundation',desc:'Set Theory, Relations, Functions, Graph Theory, Combinatorics, Propositional & Predicate Logic. Runs through every CS subject.',stats:[{n:'7-10',l:'Marks/Yr'},{n:'10',l:'Topics'},{n:'Foundation',l:'Phase'}],tags:['Foundation','Graph Theory','Logic','Combinatorics'],url:'https://gatenote.vercel.app/',prog:60},
+ la:{icon:'⊡',c:'#039be5',bg:'rgba(3,155,229,0.12)',title:'Linear Algebra',dist:'Math Citadel · Foundation',desc:'Matrices, Determinants, Eigenvalues, Eigenvectors, Vector Spaces, Linear Transformations. Engineering Mathematics section.',stats:[{n:'4-6',l:'Marks/Yr'},{n:'6',l:'Topics'},{n:'Foundation',l:'Phase'}],tags:['Foundation','Matrices','Eigenvalues','Linear'],url:'https://gatenote.vercel.app/',prog:55},
+ prob:{icon:'∫',c:'#e91e63',bg:'rgba(233,30,99,0.12)',title:'Probability & Stats',dist:'Math Citadel · Foundation',desc:'Random Variables, Distributions, Expectation, Conditional Probability, Bayes Theorem. Appears in Engineering Mathematics.',stats:[{n:'4-6',l:'Marks/Yr'},{n:'6',l:'Topics'},{n:'Foundation',l:'Phase'}],tags:['Foundation','Probability','Bayes','Stats'],url:'https://gatenote.vercel.app/',prog:65},
+ apt:{icon:'◉',c:'#4caf50',bg:'rgba(76,175,80,0.12)',title:'General Aptitude',dist:'Math Citadel · All Phases',desc:'Verbal, Numerical, Analytical, Spatial Reasoning. 15 marks guaranteed every year — no exceptions. Easiest marks with minimal prep.',stats:[{n:'15',l:'Marks/Yr'},{n:'Always',l:'Present'},{n:'All',l:'Phases'}],tags:['Aptitude','Easy Marks','Verbal','Numerical'],url:'https://gatenote.vercel.app/',prog:70},
+ engm:{icon:'∂',c:'#fdd835',bg:'rgba(253,216,53,0.12)',title:'Engineering Mathematics',dist:'Math Citadel · Foundation',desc:'Calculus, Linear Algebra, Probability combined. Full Engineering Mathematics section worth 13 marks every year without fail.',stats:[{n:'13',l:'Marks/Yr'},{n:'3',l:'Sub-Areas'},{n:'Foundation',l:'Phase'}],tags:['Foundation','Calculus','LinAlg','Probability'],url:'https://gatenote.vercel.app/',prog:55},
+ toc:{icon:'⊛',c:'#b388ff',bg:'rgba(179,136,255,0.12)',title:'Theory of Computation',dist:'Theory Nexus · Phase 3',desc:'Finite Automata, Regular Languages, CFG, PDA, Turing Machines, Decidability, Complexity Classes P and NP. Deep conceptual beauty.',stats:[{n:'7-9',l:'Marks/Yr'},{n:'8',l:'Topics'},{n:'Phase 3',l:'Focus'}],tags:['Theory','Automata','NP-Complete','Turing'],url:'https://gatenote.vercel.app/',prog:40},
+ gateiq:{icon:'⌖',c:'#00e5ff',bg:'rgba(0,229,255,0.12)',title:'GATE Intelligence',dist:'Theory Nexus · PYQ Platform',desc:'1,492 GATE PYQs with flashcards, bookmarks, analytics, keyboard shortcuts, fuzzy search and command palette. Built for deep daily practice.',stats:[{n:'1,492',l:'PYQs'},{n:'16',l:'Subjects'},{n:'2014-25',l:'Years'}],tags:['PYQ','Flashcards','Analytics','Search'],url:'https://gateecotaha.vercel.app/',prog:85},
+ ai:{icon:'⬡',c:'#ff80ab',bg:'rgba(255,128,171,0.12)',title:'AI Tutor',dist:'Theory Nexus · AI Tools',desc:'BM25 + semantic vector search over 1,492 PYQs. Ask any concept, get ranked relevant questions with context. 100% free.',stats:[{n:'1,492',l:'PYQs'},{n:'BM25+',l:'Search'},{n:'Free',l:'Access'}],tags:['AI','Semantic','BM25','Free'],url:'https://tahagateai.vercel.app/',prog:90},
+ trend:{icon:'↗',c:'#00bfa5',bg:'rgba(0,191,165,0.12)',title:'Trend Analysis',dist:'Simulation Harbor · Analytics',desc:'Visual analysis of 1,492 questions across 16 subjects from 2014-2025. Identify rising topics: Graph Theory, SQL. Falling: basic Calculus.',stats:[{n:'1,492',l:'Questions'},{n:'16',l:'Subjects'},{n:'12',l:'Years'}],tags:['Trends','Analytics','Rising','Graphs'],url:'https://tahagatetrend.vercel.app/',prog:95},
+ cbt:{icon:'⊟',c:'#00e5ff',bg:'rgba(0,229,255,0.12)',title:'GATE CBT Simulator',dist:'Simulation Harbor · Exam',desc:'Full 65-question GATE CBT in the exact exam interface with 180-minute timer, NAT support, and section navigation. Desktop only.',stats:[{n:'65',l:'Questions'},{n:'180',l:'Minutes'},{n:'Full',l:'Paper'}],tags:['Exam','CBT','Timer','NAT'],url:'https://tahagatecbt.vercel.app/',prog:80},
+ subcbt:{icon:'⊟',c:'#64ffda',bg:'rgba(100,255,218,0.12)',title:'Subject CBT',dist:'Simulation Harbor · Exam',desc:'Subject-specific CBT practice in the exact GATE interface. Focus on one subject at a time with realistic exam conditions.',stats:[{n:'16',l:'Subjects'},{n:'Focused',l:'Mode'},{n:'GATE',l:'Interface'}],tags:['Exam','Subject','Practice','Interface'],url:'https://tahagatesubjectcbt.vercel.app/',prog:75},
+ roadmap:{icon:'⊕',c:'#ffb300',bg:'rgba(255,179,0,0.12)',title:'Roadmap Tower',dist:'Simulation Harbor · Planning',desc:'Master W1-W35 plan with 5 phases covering full GATE CSE 2027 preparation from May 2026 to Feb 2027, with DSA placement prep.',stats:[{n:'35',l:'Weeks'},{n:'5',l:'Phases'},{n:'Feb',l:'2027'}],tags:['Roadmap','Phases','Plan','Active'],url:'https://gatetamz.vercel.app/',prog:20},
+ dsa:{icon:'⬡',c:'#00e676',bg:'rgba(0,230,118,0.12)',title:'DSA Question Bank',dist:'Simulation Harbor · Practice',desc:'260+ curated problems from LeetCode, GFG, Codeforces sorted week-by-week from arrays to advanced graphs. Phase-by-phase coverage.',stats:[{n:'260+',l:'Problems'},{n:'W1–W35',l:'Coverage'},{n:'LC+GFG',l:'Sources'}],tags:['DSA','LeetCode','GFG','Placement'],url:'https://dsatamz.vercel.app/',prog:60},
+ pyq:{icon:'⌖',c:'#7c4dff',bg:'rgba(124,77,255,0.12)',title:'PYQ Bank',dist:'Simulation Harbor · Practice',desc:'Topic-wise PYQ practice across 21 subjects. 2014-2025 papers with full explanations. Deep-dive on individual topics.',stats:[{n:'21',l:'Subjects'},{n:'2014-25',l:'Years'},{n:'Topic',l:'Mode'}],tags:['PYQ','Topic-wise','Explanations','2025'],url:'https://gatepvq.vercel.app/',prog:70},
+ notes:{icon:'⊕',c:'#03a9f4',bg:'rgba(3,169,244,0.12)',title:'Notes + Resources',dist:'Simulation Harbor · Study',desc:'Comprehensive notes and PDFs for all 16 GATE CSE subjects with playlists from GO Classes, NPTEL, Gate Smashers, Abdul Bari.',stats:[{n:'16',l:'Subjects'},{n:'PDFs',l:'Downloads'},{n:'Free',l:'Access'}],tags:['Notes','PDFs','Playlists','16 Subj'],url:'https://gatenote.vercel.app/',prog:85},
+ csehub:{icon:'⬟',c:'#ff6d00',bg:'rgba(255,109,0,0.12)',title:'GATE CSE Hub',dist:'Simulation Harbor · Resources',desc:'Central resource repository for all 16 GATE CSE subjects. PDF downloads, reference materials, and curated study resources. All free.',stats:[{n:'16',l:'Subjects'},{n:'Free',l:'PDFs'},{n:'Hub',l:'Type'}],tags:['Resources','Hub','16 Subj','Free'],url:'https://gatecsehub.vercel.app/',prog:90},
+ resources:{icon:'⊛',c:'#f44336',bg:'rgba(244,67,54,0.12)',title:'Resource Links',dist:'Simulation Harbor · Links',desc:'Curated links to Striver, Abdul Bari, GO Classes, Gate Smashers, NPTEL. The absolute best teachers for every GATE subject.',stats:[{n:'50+',l:'Links'},{n:'8',l:'Teachers'},{n:'All',l:'Subjects'}],tags:['Links','Striver','GO Classes','GFG'],url:'https://gatetamzresources.vercel.app/',prog:95},
+ hub:{icon:'◈',c:'#00e5ff',bg:'rgba(0,229,255,0.12)',title:'TAMZ Command',dist:'Nexus Hub · All Platforms',desc:'Central command center linking all 11 GATE prep platforms. Live countdown to GATE 2027, phase tracking, subject grid, and more.',stats:[{n:'11+',l:'Tools'},{n:'5',l:'Phases'},{n:'GATE',l:'2027'}],tags:['Hub','All Tools','Command','Nexus'],url:'https://gatecsehub.vercel.app/',prog:15}
+};
+
+const AI_MSGS = [
+ "Welcome, cadet. Target: IISc MTech CSE 2027. Click any building to begin.",
+ "Data Structures + Algorithms = ~30 marks. Highest weightage in GATE CSE. Prioritize.",
+ "GATE Intelligence holds 1,492 PYQs from 2014-2025. Daily practice is mission-critical.",
+ "Operating Systems: 8-10 marks guaranteed every year. Visit the OS Complex now.",
+ "General Aptitude gives 15 marks for relatively low effort. Never neglect it.",
+ "Simulation Harbor has CBT simulators. Full-paper runs weekly from Phase 3 onward.",
+ "Trend spike detected: Graph Theory and SQL rising sharply in 2024-2025 papers.",
+ "Theory of Computation requires conceptual clarity. Dedicate focused Phase 3 weeks.",
+ "DBMS is rising — SQL appeared heavily in 2025. Cross-reference with trend analysis.",
+ "Final sprint starts Dec 2026. Two full CBT mocks per week minimum. No exceptions.",
+];
+let aiIdx = 0, aiInt;
+
+const bootSeq = [
+ 'Connecting satellite uplink...','Loading district modules...','Calibrating 24 buildings...',
+ 'Mapping 5 learning pathways...','Syncing GATE Intelligence feed...','TAMZ NEXUS online. Welcome, cadet.'
+];
+let bootI = 0;
+function bootStep(){
+ if(bootI>=bootSeq.length){
+  setTimeout(()=>{
+   document.getElementById('boot').classList.add('hidden');
+   setTimeout(()=>{document.getElementById('boot').style.display='none';startCity();},800);
+  },400);return;
+ }
+ document.getElementById('boot-status').textContent=bootSeq[bootI++];
+ setTimeout(bootStep, bootI<bootSeq.length?300:500);
+}
+setTimeout(bootStep,400);
+
+function startCity(){
+ setTimeout(()=>document.getElementById('ai-guide').classList.add('visible'),700);
+ startFeed(); startCountdown();
+ aiInt=setInterval(()=>{aiIdx=(aiIdx+1)%AI_MSGS.length;typeAI(AI_MSGS[aiIdx]);},7000);
+}
+
+// COUNTDOWN
+function startCountdown(){
+ const gate=new Date('2027-02-01T09:30:00+05:30').getTime();
+ const start=new Date('2026-05-01T00:00:00+05:30').getTime();
+ const pad=(n,l)=>String(n).padStart(l||2,'0');
+ function tick(){
+  const now=Date.now(),diff=gate-now;
+  if(diff<0)return;
+  document.getElementById('hd').textContent=pad(Math.floor(diff/864e5),3);
+  document.getElementById('hh').textContent=pad(Math.floor((diff%864e5)/36e5));
+  document.getElementById('hm').textContent=pad(Math.floor((diff%36e5)/6e4));
+  const wk=Math.min(35,Math.floor((now-start)/(7*864e5))+1);
+  const ph=wk<=8?1:wk<=16?2:wk<=24?3:wk<=32?4:5;
+  document.getElementById('hphase').textContent=`PHASE ${ph} · W${wk}`;
+ }
+ tick();setInterval(tick,30000);
+}
+
+// DRAG/PAN/ZOOM
+const wrap=document.getElementById('city-svg-wrap');
+let scale=1,tx=0,ty=0,drag=false,lx,ly;
+function applyT(){
+ wrap.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`;
+ wrap.style.transformOrigin='center center';
+ updateMM();
+}
+const canvas=document.getElementById('city-canvas');
+canvas.addEventListener('mousedown',e=>{
+ if(e.target.closest('.bldg-group'))return;
+ drag=true;lx=e.clientX;ly=e.clientY;canvas.classList.add('grabbing');
+});
+document.addEventListener('mousemove',e=>{
+ if(!drag)return;tx+=e.clientX-lx;ty+=e.clientY-ly;lx=e.clientX;ly=e.clientY;applyT();
+});
+document.addEventListener('mouseup',()=>{drag=false;canvas.classList.remove('grabbing');});
+canvas.addEventListener('wheel',e=>{
+ e.preventDefault();
+ scale=Math.max(0.35,Math.min(2.8,scale+(e.deltaY>0?-0.1:0.1)));
+ applyT();
+},{passive:false});
+// touch
+let lt=null;
+canvas.addEventListener('touchstart',e=>{if(e.touches.length===1)lt={x:e.touches[0].clientX,y:e.touches[0].clientY};});
+canvas.addEventListener('touchmove',e=>{
+ if(e.touches.length===1&&lt){tx+=e.touches[0].clientX-lt.x;ty+=e.touches[0].clientY-lt.y;lt={x:e.touches[0].clientX,y:e.touches[0].clientY};applyT();}
+});
+
+function adjustZoom(d){scale=Math.max(0.35,Math.min(2.8,scale+d));applyT();}
+function resetZoom(){
+ scale=1;tx=0;ty=0;
+ wrap.style.transition='transform 0.5s ease';applyT();
+ setTimeout(()=>wrap.style.transition='',500);
+}
+function flyTo(d){
+ const pos={core:{tx:250,ty:80},systems:{tx:-250,ty:80},math:{tx:250,ty:-230},theory:{tx:-250,ty:-230},harbor:{tx:0,ty:-320}};
+ const p=pos[d]||{tx:0,ty:0};
+ scale=1.4;tx=p.tx;ty=p.ty;
+ wrap.style.transition='transform 0.7s cubic-bezier(0.4,0,0.2,1)';applyT();
+ setTimeout(()=>wrap.style.transition='',700);
+}
+function updateMM(){
+ const vp=document.getElementById('mm-vp');if(!vp)return;
+ const vw=1400/scale,vh=1000/scale;
+ const vx=Math.max(0,-tx/scale),vy=Math.max(0,-ty/scale);
+ vp.setAttribute('x',vx);vp.setAttribute('y',vy);
+ vp.setAttribute('width',Math.min(1400,vw));vp.setAttribute('height',Math.min(1000,vh));
+}
+
+// BUILDING CLICK
+function openBuilding(id){
+ const b=BDATA[id];if(!b)return;
+ document.getElementById('pIcon').textContent=b.icon;
+ document.getElementById('pIcon').style.background=b.bg;
+ document.getElementById('pIcon').style.border=`1px solid ${b.c}40`;
+ document.getElementById('pTitle').textContent=b.title;
+ document.getElementById('pTitle').style.color=b.c;
+ document.getElementById('pDistrict').textContent=b.dist;
+ document.getElementById('pDesc').textContent=b.desc;
+ document.getElementById('pStats').innerHTML=b.stats.map(s=>`<div class="panel-stat"><div class="panel-stat-n" style="color:${b.c}">${s.n}</div><div class="panel-stat-l">${s.l}</div></div>`).join('');
+ document.getElementById('pTags').innerHTML=b.tags.map(t=>`<span class="panel-tag" style="color:${b.c};border-color:${b.c}40;background:${b.bg}">${t}</span>`).join('');
+ document.getElementById('pProg').style.width=b.prog+'%';
+ document.getElementById('pProg').style.background=b.c;
+ document.getElementById('pProgPct').textContent=b.prog+'%';
+ document.getElementById('pCta').href=b.url;
+ document.getElementById('pCta').style.cssText=`border-color:${b.c}50;color:${b.c};background:${b.bg}`;
+ document.getElementById('city-panel').classList.add('open');
+ addFeed(`Accessing ${b.title}...`,'ok');
+ const aiC={ds:'DS is the skeleton — trees, graphs, heaps. Most GATE questions trace back here.',algo:'Algorithms: master DP patterns and graph traversals. They appear every year.',os:'OS is worth 8-10 marks. Deadlock, scheduling, paging — learn the math behind each.',gateiq:'1,492 PYQs at your fingertips. This is the most powerful tool you have.',ai:'Ask any concept. The AI searches semantically across 12 years of GATE papers.',toc:'TOC rewards conceptual understanding over memorization. Draw the automata.',cbt:'Weekly full mocks from Phase 3. No shortcuts — simulate the real exam environment.'};
+ if(aiC[id])typeAI(aiC[id]);
+}
+function closePanel(){document.getElementById('city-panel').classList.remove('open');}
+
+// AI TYPE
+function typeAI(msg){
+ document.getElementById('ai-guide').classList.add('visible');
+ const el=document.getElementById('ai-text');
+ el.innerHTML='';let i=0;
+ const iv=setInterval(()=>{
+  if(i>=msg.length){el.innerHTML=msg+'<span class="ai-cursor"></span>';clearInterval(iv);return;}
+  el.textContent=msg.substring(0,++i);
+ },16);
+}
+
+// FEED
+const feedEvts=[
+ {m:'PYQ Bank synced — ',d:'1,492 questions',t:'ok'},
+ {m:'Phase 1 active — ',d:'Week in progress',t:''},
+ {m:'CBT Simulator — ',d:'Ready',t:'ok'},
+ {m:'Trend spike: ',d:'Graph Theory ↑',t:'warn'},
+ {m:'Notes Hub — ',d:'Updated Algorithms',t:'ok'},
+ {m:'AI Tutor — ',d:'BM25 indexed',t:'ok'},
+ {m:'Trend spike: ',d:'SQL queries ↑',t:'warn'},
+ {m:'DSA Bank — ',d:'260+ problems',t:''},
+ {m:'Target: ',d:'IISc MTech CSE',t:'ok'},
+ {m:'GATE Intelligence — ',d:'Flashcards ready',t:'ok'},
+ {m:'GATE 2027 — ',d:'Countdown active',t:''},
+ {m:'Resource Links — ',d:'Striver updated',t:'ok'},
+];
+let feedI=0;
+function addFeed(msg,type){
+ const log=document.getElementById('feed-log');
+ const d=document.createElement('div');
+ d.className='feed-line'+(type?' '+type:'');
+ d.innerHTML=msg;
+ log.prepend(d);
+ if(log.children.length>7)log.removeChild(log.lastChild);
+}
+function startFeed(){
+ function go(){
+  const e=feedEvts[feedI++%feedEvts.length];
+  addFeed(e.m+`<span>${e.d}</span>`,e.t);
+  setTimeout(go,2200+Math.random()*2800);
+ }
+ setTimeout(go,1600);
+}
+
+// MODAL
+function openModal(type){
+ document.getElementById('modal-overlay').classList.add('open');
+ const tools=[
+  {icon:'🗺️',name:'GATE + Placement Roadmap',tag:'W1–W35 · 5 phases · Active',url:'https://gatetamz.vercel.app/'},
+  {icon:'📚',name:'GATE CSE Notes Hub',tag:'16 subjects · PDFs · Free',url:'https://gatenote.vercel.app/'},
+  {icon:'💻',name:'DSA Question Bank',tag:'260+ problems · LeetCode + GFG',url:'https://dsatamz.vercel.app/'},
+  {icon:'📦',name:'GATE CSE Hub',tag:'All 16 subjects · Resources · Free',url:'https://gatecsehub.vercel.app/'},
+  {icon:'🔗',name:'Resource Links',tag:'Striver · Abdul Bari · GO Classes',url:'https://gatetamzresources.vercel.app/'},
+  {icon:'✦',name:'AI Tutor',tag:'1,492 PYQs · BM25 + Semantic · Free',url:'https://tahagateai.vercel.app/'},
+  {icon:'⌖',name:'GATE Intelligence CSE Bank',tag:'Flashcards · Bookmarks · 1,484 PYQs',url:'https://gateecotaha.vercel.app/'},
+  {icon:'📋',name:'PYQ Question Bank',tag:'21 subjects · 2014-2025 · Topic-wise',url:'https://gatepvq.vercel.app/'},
+  {icon:'📈',name:'GATE Trend Analysis',tag:'1,492 questions · 16 subjects · 12yr',url:'https://tahagatetrend.vercel.app/'},
+  {icon:'🖥️',name:'GATE CBT Simulator',tag:'65 questions · 180 min · Full paper',url:'https://tahagatecbt.vercel.app/'},
+  {icon:'📝',name:'Subject CBT Simulator',tag:'Subject-specific GATE interface',url:'https://tahagatesubjectcbt.vercel.app/'},
+ ];
+ if(type==='hub'){
+  document.getElementById('mIcon').textContent='◈';
+  document.getElementById('mIcon').style.cssText='background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.2)';
+  document.getElementById('mTitle').textContent='TAMZ NEXUS — All Tools';
+  document.getElementById('mSub').textContent='11 platforms · GATE CSE 2027 · IISc target';
+  document.getElementById('mBody').innerHTML=`
+   <p class="modal-desc">Your complete GATE prep ecosystem. Every platform needed to reach IISc MTech CSE in one command center.</p>
+   <div class="modal-links">${tools.map(t=>`<a class="modal-link" href="${t.url}" target="_blank">
+    <div class="modal-link-icon">${t.icon}</div>
+    <div class="modal-link-text"><div class="modal-link-name">${t.name}</div><div class="modal-link-url">${t.tag}</div></div>
+    <div class="modal-link-arr">→</div></a>`).join('')}
+   </div>`;
+ } else if(type==='phases'){
+  document.getElementById('mIcon').textContent='◈';
+  document.getElementById('mIcon').style.cssText='background:rgba(255,179,0,0.1);border:1px solid rgba(255,179,0,0.2)';
+  document.getElementById('mTitle').textContent='5-Phase Master Plan';
+  document.getElementById('mSub').textContent='W1–W35 · May 2026 – Feb 2027';
+  const phases=[
+   {n:1,name:'Foundation',range:'May–Jun 2026 · W1–W8',c:'#00e676',topics:'DS, Algorithms, C, Discrete Math, Linear Algebra, Probability',prog:20},
+   {n:2,name:'Core Systems',range:'Jul–Aug 2026 · W9–W16',c:'#00e5ff',topics:'OS, DBMS, CN basics, Algorithms deep dive, mock OAs start',prog:0},
+   {n:3,name:'Advanced Topics',range:'Sep–Oct 2026 · W17–W24',c:'#b388ff',topics:'TOC, CN advanced, Discrete Math revision, Full mock OAs',prog:0},
+   {n:4,name:'Theory & Revision',range:'Oct–Nov 2026 · W25–W32',c:'#ffb300',topics:'COA, Digital Logic, Compiler Design, 1 full mock/week',prog:0},
+   {n:5,name:'Final Sprint',range:'Dec 2026 – Feb 2027 · W33–W35+',c:'#ff5252',topics:'PYQ marathon, 2 full mocks/week, formula sheets, interviews',prog:0},
+  ];
+  document.getElementById('mBody').innerHTML=`
+   <p class="modal-desc">35 weeks from foundation to GATE 2027. Each phase builds deliberately on the last.</p>
+   ${phases.map(p=>`<div style="border:1px solid ${p.c}25;border-radius:6px;padding:14px;background:rgba(0,0,0,0.25)">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:7px">
+     <span style="font-family:var(--orbit);font-size:20px;font-weight:700;color:${p.c}">${p.n}</span>
+     <div><div style="font-weight:600;font-size:13px">${p.name}</div><div style="font-size:9px;color:var(--ink3);font-family:var(--mono)">${p.range}</div></div>
+     ${p.prog>0?`<span style="margin-left:auto;font-family:var(--mono);font-size:9px;color:${p.c}">ACTIVE</span>`:''}
+    </div>
+    <div style="font-size:11px;color:var(--ink2);margin-bottom:8px">${p.topics}</div>
+    <div style="background:rgba(255,255,255,0.06);height:2px;border-radius:2px"><div style="width:${p.prog}%;height:100%;background:${p.c};border-radius:2px"></div></div>
+   </div>`).join('')}`;
+ } else if(type==='briefing'){
+  document.getElementById('mIcon').textContent='⬡';
+  document.getElementById('mIcon').style.cssText='background:rgba(179,136,255,0.1);border:1px solid rgba(179,136,255,0.2)';
+  document.getElementById('mTitle').textContent='NEXUS-AI Intelligence Briefing';
+  document.getElementById('mSub').textContent='Strategic GATE 2027 guidance';
+  document.getElementById('mBody').innerHTML=`
+   <p class="modal-desc">Tactical briefings from NEXUS-AI to optimize your path to IISc MTech CSE.</p>
+   ${AI_MSGS.map(m=>`<div style="border-left:2px solid rgba(179,136,255,0.45);padding:9px 13px;background:rgba(179,136,255,0.04);border-radius:0 5px 5px 0;font-size:11.5px;color:var(--ink2);line-height:1.75">⬡ ${m}</div>`).join('')}`;
+ }
+}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+
+// COMMAND PALETTE
+const cpItems=Object.entries(BDATA).map(([id,b])=>({id,...b}));
+const cpBackdrop=document.getElementById('cpBackdrop');
+const cpInput=document.getElementById('cpInput');
+const cpResults=document.getElementById('cpResults');
+
+function openCP(){
+ cpBackdrop.classList.add('open');document.body.style.overflow='hidden';
+ cpInput.value='';renderCP('');setTimeout(()=>cpInput.focus(),50);
+}
+function closeCP(){cpBackdrop.classList.remove('open');document.body.style.overflow='';}
+function renderCP(q){
+ const ql=q.toLowerCase().trim();
+ const f=ql?cpItems.filter(i=>(i.title+i.dist+i.tags.join(' ')+i.desc).toLowerCase().includes(ql)):cpItems;
+ if(!f.length){cpResults.innerHTML=`<div style="padding:24px;text-align:center;color:var(--ink3);font-size:12px">No results for "${q}"</div>`;return;}
+ cpResults.innerHTML=f.map(b=>`<div class="cp-item" onclick="closeCP();openBuilding('${b.id}')">
+  <div class="cp-item-icon" style="background:${b.bg};border:1px solid ${b.c}30">${b.icon}</div>
+  <div style="flex:1;min-width:0">
+   <div class="cp-item-name" style="color:${b.c}">${b.title}</div>
+   <div class="cp-item-sub">${b.dist}</div>
+  </div>
+  <span class="cp-tag" style="color:${b.c};border-color:${b.c}30">${b.tags[0]}</span>
+ </div>`).join('');
+}
+document.getElementById('cmdBtn').onclick=openCP;
+cpBackdrop.addEventListener('click',e=>{if(e.target===cpBackdrop)closeCP();});
+cpInput.addEventListener('input',()=>renderCP(cpInput.value));
+document.addEventListener('keydown',e=>{
+ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();cpBackdrop.classList.contains('open')?closeCP():openCP();return;}
+ if(!cpBackdrop.classList.contains('open'))return;
+ if(e.key==='Escape')closeCP();
+});
+
+// PARTICLES
+const pc=document.getElementById('particles');
+const pctx=pc.getContext('2d');
+let pts=[];
+function rsz(){pc.width=window.innerWidth;pc.height=window.innerHeight;}
+rsz();window.addEventListener('resize',rsz);
+for(let i=0;i<55;i++) pts.push({x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25,s:Math.random()*1.4+0.3,op:Math.random()*.35+0.08,c:Math.random()>.5?'#00e5ff':'#b388ff'});
+function pAnim(){
+ pctx.clearRect(0,0,pc.width,pc.height);
+ pts.forEach(p=>{
+  p.x+=p.vx;p.y+=p.vy;
+  if(p.x<0)p.x=pc.width;if(p.x>pc.width)p.x=0;
+  if(p.y<0)p.y=pc.height;if(p.y>pc.height)p.y=0;
+  pctx.beginPath();pctx.arc(p.x,p.y,p.s,0,Math.PI*2);
+  pctx.fillStyle=p.c+Math.floor(p.op*255).toString(16).padStart(2,'0');
+  pctx.fill();
+ });
+ requestAnimationFrame(pAnim);
+}
+pAnim();
+setTimeout(updateMM,200);
+</script>
+
+<!-- ╔══════════════════════════════════════════════════╗ -->
+<!-- ║   TAMZ THEME SWITCHER — smartcity theme         ║ -->
+<!-- ╚══════════════════════════════════════════════════╝ -->
+<style>
+#tamz-sw{position:fixed;bottom:22px;right:22px;z-index:9000;display:flex;flex-direction:column;align-items:flex-end;gap:6px;font-family:'Space Mono',monospace}
+#tamz-sw-menu{display:none;flex-direction:column;gap:3px;background:rgba(8,11,16,0.97);border:1px solid rgba(0,229,255,0.22);padding:10px;min-width:204px;box-shadow:0 8px 32px rgba(0,0,0,.9),0 0 24px rgba(0,229,255,.06);backdrop-filter:blur(8px)}
+#tamz-sw-menu.open{display:flex}
+#tamz-sw-btn{width:40px;height:40px;background:rgba(8,11,16,0.97);border:1px solid rgba(0,229,255,0.22);color:var(--cyan);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s;backdrop-filter:blur(8px)}
+#tamz-sw-btn:hover{border-color:var(--cyan);box-shadow:0 0 14px rgba(0,229,255,.2)}
+.tsw-lbl{font-size:8px;color:var(--cyan);letter-spacing:.2em;text-transform:uppercase;padding:0 4px;margin-bottom:3px}
+.tsw-b{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid rgba(0,229,255,.1);background:transparent;color:var(--ink3);font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .12s;text-align:left;text-decoration:none;width:100%}
+.tsw-b:hover{border-color:var(--cyan);color:var(--ink);background:rgba(0,229,255,.06)}
+.tsw-b.active{border-color:rgba(0,229,255,.4);color:var(--cyan);background:rgba(0,229,255,.08);cursor:default;text-shadow:0 0 6px rgba(0,229,255,.4)}
+.tsw-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.tsw-sep{height:1px;background:rgba(0,229,255,.1);margin:4px 0}
+</style>
+<div id="tamz-sw">
+  <div id="tamz-sw-menu" role="menu">
+    <div class="tsw-lbl">// TAMZ THEME</div>
+    <button class="tsw-b" onclick="tswGo('hacker')"><span class="tsw-dot" style="background:#00ff41"></span>TERMINAL</button>
+    <button class="tsw-b" onclick="tswGo('executive')"><span class="tsw-dot" style="background:#c8954a"></span>EXECUTIVE</button>
+    <button class="tsw-b" onclick="tswGo('netflix')"><span class="tsw-dot" style="background:#E50914"></span>CINEMATIC</button>
+    <button class="tsw-b" onclick="tswGo('cyberpunk')"><span class="tsw-dot" style="background:#ff00aa"></span>NIGHT CITY</button>
+    <button class="tsw-b" onclick="tswGo('apple')"><span class="tsw-dot" style="background:#0071e3"></span>APPLE MODE</button>
+    <button class="tsw-b" onclick="tswGo('nasa')"><span class="tsw-dot" style="background:#00e676"></span>MISSION CTRL</button>
+    <button class="tsw-b active" disabled><span class="tsw-dot" style="background:#00e5ff;box-shadow:0 0 5px #00e5ff"></span>SMART CITY</button>
+    <div class="tsw-sep"></div>
+    <a class="tsw-b" href="index.html?choose">&#8592; CHOOSE AGAIN</a>
+  </div>
+  <button id="tamz-sw-btn" onclick="tswToggle()" title="Switch theme  Alt+T" aria-label="Open theme switcher">⊕</button>
+</div>
+<script>
+(function(){
+  function tswToggle(){document.getElementById('tamz-sw-menu').classList.toggle('open')}
+    function tswGo(t){
+    localStorage.setItem('tamz-theme',t);
+    var m={'hacker':'hacker.html','executive':'executive.html','netflix':'netflix_redesign.html','cyberpunk':'cyberpunk.html','apple':'apple.html','nasa':'nasa.html'};
+    window.location.replace(m[t]||'index.html');
+  }
+  window.tswToggle=tswToggle;window.tswGo=tswGo;
+  document.addEventListener('keydown',function(e){if(e.altKey&&e.key.toLowerCase()==='t'){e.preventDefault();tswToggle();}}); 
+  document.addEventListener('click',function(e){if(!e.target.closest('#tamz-sw'))document.getElementById('tamz-sw-menu').classList.remove('open');});
+})();
+</script>
+
+</body>
+</html>
