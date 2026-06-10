@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TAMZ — GATE CSE 2027</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  /* Light mode base */
+  --bg:       #f5f5f7;
+  --bg2:      #ffffff;
+  --bg3:      #fbfbfd;
+  --surface:  rgba(255,255,255,0.72);
+  --surface2: rgba(255,255,255,0.55);
+  --border:   rgba(0,0,0,0.08);
+  --border2:  rgba(0,0,0,0.12);
+  --ink:      #1d1d1f;
+  --ink2:     #6e6e73;
+  --ink3:     #aeaeb2;
+  --accent:   #0071e3;
+  --accent2:  #0077ed;
+  --accent-dim: rgba(0,113,227,0.1);
+  --accent-border: rgba(0,113,227,0.22);
+  --green:    #28cd41;
+  --orange:   #ff9500;
+  --red:      #ff3b30;
+  --purple:   #af52de;
+  --teal:     #32ade6;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.05);
+  --shadow-lg: 0 20px 60px rgba(0,0,0,.10), 0 8px 24px rgba(0,0,0,.06);
+  --radius:   18px;
+  --radius-sm:10px;
+  --sans:     'Inter',-apple-system,'SF Pro Display','Helvetica Neue',Arial,sans-serif;
+  --ease:     cubic-bezier(.25,.46,.45,.94);
+}
+
+@media(prefers-color-scheme:dark){:root{
+  --bg:       #000000;
+  --bg2:      #1c1c1e;
+  --bg3:      #111111;
+  --surface:  rgba(28,28,30,0.82);
+  --surface2: rgba(44,44,46,0.72);
+  --border:   rgba(255,255,255,0.1);
+  --border2:  rgba(255,255,255,0.16);
+  --ink:      #f5f5f7;
+  --ink2:     #98989d;
+  --ink3:     #636366;
+  --accent:   #2997ff;
+  --accent2:  #419cff;
+  --accent-dim: rgba(41,151,255,0.12);
+  --accent-border: rgba(41,151,255,0.25);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.4);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.4);
+  --shadow-lg: 0 20px 60px rgba(0,0,0,.6), 0 8px 24px rgba(0,0,0,.3);
+}}
+
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:15px;
+  line-height:1.5;
+  overflow-x:hidden;
+  transition:background .3s var(--ease);
+}
+a{color:inherit;text-decoration:none}
+
+/* ── FROSTED GRAIN LAYER ── */
+body::before{
+  content:'';
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  opacity:.6;
+}
+
+/* ── NAV ── */
+.nav{
+  position:sticky;top:0;z-index:200;
+  height:52px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;
+  background:rgba(var(--nav-rgb,255,255,255),0.72);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);
+  backdrop-filter:saturate(180%) blur(20px);
+  border-bottom:1px solid var(--border);
+}
+@media(prefers-color-scheme:dark){
+  .nav{background:rgba(0,0,0,0.72)}
+}
+.nav-logo{
+  font-size:17px;font-weight:600;color:var(--ink);
+  letter-spacing:-.02em;
+}
+.nav-logo span{color:var(--accent)}
+.nav-center{
+  display:flex;align-items:center;gap:28px;
+  font-size:13px;font-weight:400;color:var(--ink2);
+}
+.nav-center a:hover{color:var(--ink);transition:color .15s}
+.nav-right{
+  display:flex;align-items:center;gap:12px;
+}
+.nav-cd{
+  font-size:12px;font-weight:500;color:var(--ink2);
+  letter-spacing:-.01em;
+}
+.nav-cd strong{color:var(--accent);font-weight:600}
+.nav-dot{
+  width:7px;height:7px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 0 0 rgba(40,205,65,.4);
+  animation:nav-pulse 2.4s ease infinite;
+}
+@keyframes nav-pulse{0%,100%{box-shadow:0 0 0 0 rgba(40,205,65,.4)}60%{box-shadow:0 0 0 7px rgba(40,205,65,0)}}
+
+/* ── COUNTDOWN BAR ── */
+.cd-bar{
+  background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  padding:10px 28px;
+  display:flex;align-items:center;gap:24px;
+  font-size:12px;font-weight:400;color:var(--ink2);
+  overflow-x:auto;position:relative;z-index:2;
+}
+.cd-label{font-weight:500;color:var(--ink);letter-spacing:-.01em;flex-shrink:0}
+.cd-unit{display:flex;align-items:baseline;gap:4px;flex-shrink:0}
+.cd-n{font-size:19px;font-weight:700;color:var(--ink);letter-spacing:-.03em;line-height:1}
+.cd-u{font-size:10px;font-weight:500;color:var(--ink3);letter-spacing:.02em;text-transform:uppercase}
+.cd-sep{color:var(--border2);font-weight:300;font-size:18px}
+.cd-phase{
+  margin-left:auto;
+  font-size:11px;font-weight:600;
+  color:var(--accent);
+  background:var(--accent-dim);
+  border:1px solid var(--accent-border);
+  padding:3px 12px;border-radius:20px;flex-shrink:0;
+  letter-spacing:.01em;
+}
+.cd-prog-wrap{height:3px;background:var(--border);position:relative;z-index:2}
+.cd-prog-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--accent),#5ac8fa);
+  position:absolute;left:0;top:0;
+  border-radius:0 2px 2px 0;
+  transition:width 1s var(--ease);
+}
+
+/* ── WRAPPER ── */
+.wrap{position:relative;z-index:2;max-width:1020px;margin:0 auto;padding:0 28px}
+
+/* ── HERO ── */
+.hero{
+  text-align:center;
+  padding:80px 0 60px;
+  position:relative;
+}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:12px;font-weight:600;color:var(--accent);
+  letter-spacing:.04em;text-transform:uppercase;
+  background:var(--accent-dim);border:1px solid var(--accent-border);
+  padding:5px 14px;border-radius:20px;
+  margin-bottom:24px;
+}
+.hero-eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:nav-pulse 2.4s ease infinite}
+
+.hero-h{
+  font-size:clamp(44px,7.5vw,80px);
+  font-weight:700;
+  letter-spacing:-.04em;
+  line-height:1.05;
+  color:var(--ink);
+  margin-bottom:20px;
+}
+.hero-h em{font-style:normal;color:var(--accent)}
+
+.hero-sub{
+  font-size:clamp(17px,2.2vw,21px);
+  font-weight:400;
+  color:var(--ink2);
+  max-width:600px;
+  margin:0 auto 40px;
+  line-height:1.6;
+  letter-spacing:-.01em;
+}
+.hero-sub strong{color:var(--ink);font-weight:500}
+
+.hero-ctas{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:52px}
+.cta-p{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;
+  padding:12px 26px;border-radius:980px;
+  font-size:15px;font-weight:600;letter-spacing:-.01em;
+  transition:filter .15s,transform .15s;box-shadow:0 4px 12px rgba(0,113,227,.3);
+}
+.cta-p:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.cta-s{
+  display:inline-flex;align-items:center;gap:6px;
+  background:transparent;color:var(--accent);
+  padding:12px 26px;border-radius:980px;
+  font-size:15px;font-weight:600;letter-spacing:-.01em;
+  transition:background .15s;
+}
+.cta-s:hover{background:var(--accent-dim)}
+
+/* ── STAT STRIP ── */
+.stat-strip{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:1px;background:var(--border);
+  border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;box-shadow:var(--shadow-md);
+  margin-bottom:0;max-width:720px;margin:0 auto;
+}
+.stat-cell{
+  background:var(--bg2);
+  padding:18px 20px;
+  text-align:center;
+  transition:background .15s;
+}
+.stat-n{
+  font-size:26px;font-weight:700;color:var(--ink);
+  letter-spacing:-.04em;line-height:1;margin-bottom:4px;
+}
+.stat-l{font-size:11px;font-weight:500;color:var(--ink3);letter-spacing:.03em;text-transform:uppercase}
+
+/* ── SECTION HEADER ── */
+.sec-head{
+  text-align:center;
+  margin:72px 0 32px;
+}
+.sec-tag{
+  display:inline-block;
+  font-size:11px;font-weight:700;color:var(--accent);
+  letter-spacing:.08em;text-transform:uppercase;
+  margin-bottom:10px;
+}
+.sec-h{
+  font-size:clamp(28px,4vw,40px);
+  font-weight:700;letter-spacing:-.03em;
+  color:var(--ink);line-height:1.1;margin-bottom:10px;
+}
+.sec-h em{font-style:normal;color:var(--accent)}
+.sec-d{
+  font-size:16px;color:var(--ink2);max-width:520px;
+  margin:0 auto;line-height:1.6;letter-spacing:-.01em;
+}
+
+/* ── TOOL CARDS ── */
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:12px}
+
+.card{
+  display:block;
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:22px;
+  position:relative;overflow:hidden;
+  transition:transform .2s var(--ease),box-shadow .2s var(--ease),border-color .2s;
+  box-shadow:var(--shadow-sm);
+  cursor:pointer;
+}
+.card:hover{
+  transform:translateY(-3px);
+  box-shadow:var(--shadow-lg);
+  border-color:var(--border2);
+}
+.card-accent{
+  position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--c,var(--accent)),transparent);
+  opacity:.7;border-radius:var(--radius) var(--radius) 0 0;
+}
+.card-icon{
+  width:40px;height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;margin-bottom:14px;
+  background:var(--cg,var(--accent-dim));
+}
+.card h3{
+  font-size:15px;font-weight:600;color:var(--ink);
+  letter-spacing:-.02em;margin-bottom:7px;
+}
+.card p{
+  font-size:13px;color:var(--ink2);line-height:1.6;
+  letter-spacing:-.01em;margin-bottom:14px;
+}
+.card-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.pill{
+  font-size:11px;font-weight:500;
+  padding:3px 10px;border-radius:20px;
+  border:1px solid var(--c-border,var(--border2));
+  color:var(--c-text,var(--ink2));
+  background:var(--c-bg,var(--bg));
+  letter-spacing:.01em;
+}
+.card-ft{
+  display:flex;align-items:center;justify-content:space-between;
+  border-top:1px solid var(--border);padding-top:12px;margin-top:4px;
+}
+.card-tag{font-size:11px;color:var(--ink3);letter-spacing:.01em}
+.card-arr{font-size:15px;color:var(--c,var(--accent));opacity:.7;transition:opacity .15s,transform .15s}
+.card:hover .card-arr{opacity:1;transform:translate(2px,-2px)}
+
+/* ── PHASE LIST ── */
+.phases{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+.phase{
+  display:flex;align-items:stretch;
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--radius-sm);overflow:hidden;
+  text-decoration:none;color:inherit;
+  transition:border-color .18s,box-shadow .18s,transform .18s;
+  box-shadow:var(--shadow-sm);
+}
+.phase:hover{
+  border-color:var(--ph,var(--accent));
+  box-shadow:var(--shadow-md);
+  transform:translateX(3px);
+}
+.ph-n{
+  width:52px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;font-weight:700;letter-spacing:-.04em;
+  color:var(--ph,var(--accent));
+  background:var(--ph-bg,var(--accent-dim));
+  border-right:1px solid var(--ph-border,var(--accent-border));
+}
+.ph-body{flex:1;padding:14px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.ph-info{flex:1;min-width:160px}
+.ph-name{font-size:13px;font-weight:500;color:var(--ink);letter-spacing:-.01em;margin-bottom:4px}
+.ph-range{font-size:11px;color:var(--ink3)}
+.ph-tags{display:flex;gap:5px;flex-wrap:wrap}
+.ph-tag{
+  font-size:10px;font-weight:500;padding:2px 9px;
+  border-radius:20px;border:1px solid var(--ph-border,var(--accent-border));
+  color:var(--ph,var(--accent));background:var(--ph-bg,var(--accent-dim));
+  letter-spacing:.01em;
+}
+.ph-prog{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.ph-pct{font-size:11px;font-weight:600;color:var(--ph,var(--accent));letter-spacing:-.01em}
+.ph-bar-w{width:96px;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.ph-bar{height:100%;background:var(--ph,var(--accent));border-radius:2px;transition:width 1.3s var(--ease)}
+.ph-arr{font-size:16px;color:var(--ink3);padding:0 14px;align-self:center;transition:color .18s,transform .18s}
+.phase:hover .ph-arr{color:var(--ph,var(--accent));transform:translateX(3px)}
+
+/* ── SUBJECTS ── */
+.subj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px;margin-bottom:8px}
+.subj-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);
+  text-decoration:none;color:inherit;
+  transition:border-color .15s,background .15s,transform .15s;
+  box-shadow:var(--shadow-sm);
+}
+.subj-item:hover{
+  border-color:var(--accent-border);
+  background:var(--accent-dim);
+  transform:translateY(-2px);
+  box-shadow:var(--shadow-md);
+}
+.subj-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.subj-name{font-size:13px;font-weight:500;color:var(--ink);flex:1;letter-spacing:-.01em}
+.subj-tag{font-size:10px;font-weight:500;color:var(--ink3)}
+
+/* ── DSA GRID ── */
+.dsa-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px;margin-bottom:8px}
+
+/* ── DIVIDER ── */
+.div{
+  margin:60px 0 0;
+  height:1px;background:var(--border);
+}
+
+/* ── FOOTER ── */
+.footer{
+  margin:60px 0 0;padding:32px 0 40px;
+  border-top:1px solid var(--border);
+}
+.ft-inner{
+  display:flex;gap:48px;flex-wrap:wrap;margin-bottom:28px;
+}
+.ft-col-h{font-size:13px;font-weight:600;color:var(--ink);letter-spacing:-.01em;margin-bottom:12px}
+.ft-link{
+  font-size:13px;color:var(--ink2);display:block;
+  margin-bottom:7px;letter-spacing:-.01em;
+  transition:color .15s;
+}
+.ft-link:hover{color:var(--accent)}
+.ft-note{
+  font-size:11px;color:var(--ink3);
+  letter-spacing:.01em;text-align:center;
+  padding-top:20px;border-top:1px solid var(--border);
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* ── ANIMATION ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.hero-eyebrow{animation:fadeUp .5s var(--ease) .1s both}
+.hero-h{animation:fadeUp .5s var(--ease) .2s both}
+.hero-sub{animation:fadeUp .5s var(--ease) .3s both}
+.hero-ctas{animation:fadeUp .5s var(--ease) .4s both}
+.stat-strip{animation:fadeUp .5s var(--ease) .5s both}
+
+/* ── RESPONSIVE ── */
+@media(max-width:860px){
+  .grid-3{grid-template-columns:1fr 1fr}
+  .stat-strip{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:600px){
+  .grid-3,.grid-2{grid-template-columns:1fr}
+  .nav-center{display:none}
+  .stat-strip{grid-template-columns:repeat(2,1fr)}
+  .hero{padding:52px 0 36px}
+  .wrap{padding:0 18px}
+}
+</style>
+</head>
+<body>
+
+<script>
+(function(){var t=localStorage.getItem('tamz-theme');if(t&&t!=='apple'){var m={hacker:'hacker.html',executive:'executive.html',netflix:'netflix_redesign.html',cyberpunk:'cyberpunk.html'};if(m[t])window.location.replace(m[t]);}})();
+</script>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-logo">TAMZ<span>.</span></div>
+  <div class="nav-center">
+    <a href="#tools">Study</a>
+    <a href="#pyq">PYQ</a>
+    <a href="#exam">Exam</a>
+    <a href="#roadmap">Roadmap</a>
+  </div>
+  <div class="nav-right">
+    <div class="nav-cd">T-minus <strong id="navDays">—</strong> days</div>
+    <div class="nav-dot"></div>
+  </div>
+</nav>
+
+<!-- COUNTDOWN BAR -->
+<div class="cd-bar">
+  <span class="cd-label">GATE 2027</span>
+  <div class="cd-unit"><span class="cd-n" id="cdD">—</span><span class="cd-u">Days</span></div>
+  <span class="cd-sep">·</span>
+  <div class="cd-unit"><span class="cd-n" id="cdH">—</span><span class="cd-u">Hours</span></div>
+  <span class="cd-sep">·</span>
+  <div class="cd-unit"><span class="cd-n" id="cdM">—</span><span class="cd-u">Min</span></div>
+  <span class="cd-sep">·</span>
+  <div class="cd-unit"><span class="cd-n" id="cdS">—</span><span class="cd-u">Sec</span></div>
+  <div class="cd-phase">Phase 1 — Active</div>
+</div>
+<div class="cd-prog-wrap"><div class="cd-prog-fill" id="cdProg" style="width:14%"></div></div>
+
+<div class="wrap">
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow"><div class="dot"></div>Phase 1 · Week 5 of 35</div>
+  <h1 class="hero-h">Everything you need.<br><em>Nothing you don't.</em></h1>
+  <p class="hero-sub">11 tools. 1,492 PYQs. 260+ DSA problems. One focused path to <strong>GATE 2027</strong> and IISc MTech CSE.</p>
+  <div class="hero-ctas">
+    <a href="https://gatetamz.vercel.app/" target="_blank" class="cta-p">Open Roadmap →</a>
+    <a href="https://tahagateai.vercel.app/" target="_blank" class="cta-s">AI Tutor ↗</a>
+  </div>
+  <div class="stat-strip">
+    <div class="stat-cell"><div class="stat-n">1,492</div><div class="stat-l">PYQs loaded</div></div>
+    <div class="stat-cell"><div class="stat-n">260+</div><div class="stat-l">DSA problems</div></div>
+    <div class="stat-cell"><div class="stat-n">16</div><div class="stat-l">Subjects</div></div>
+    <div class="stat-cell"><div class="stat-n" style="color:var(--accent)">W5</div><div class="stat-l">Active now</div></div>
+  </div>
+</section>
+
+<!-- STUDY TOOLS -->
+<section id="tools">
+  <div class="sec-head">
+    <div class="sec-tag">Study System</div>
+    <h2 class="sec-h">Study &amp; <em>Practice</em></h2>
+    <p class="sec-d">Roadmap, notes, DSA bank, and resource links — the complete study system for GATE CSE 2027 and placements.</p>
+  </div>
+  <div class="grid-3">
+    <a href="https://gatetamz.vercel.app/" target="_blank" class="card" style="--c:#0071e3;--cg:rgba(0,113,227,.07)">
+      <div class="card-accent"></div>
+      <div class="card-icon">🗺️</div>
+      <h3>GATE + Placement Roadmap</h3>
+      <p>Week-by-week plan, May 2026 – Feb 2027. OS → DBMS → CN front-loaded for placements. DSA runs every single day, all 35 weeks.</p>
+      <div class="card-pills">
+        <span class="pill" style="--c-border:rgba(0,113,227,.2);--c-text:#0071e3;--c-bg:rgba(0,113,227,.07)">5 phases</span>
+        <span class="pill" style="--c-border:rgba(0,113,227,.2);--c-text:#0071e3;--c-bg:rgba(0,113,227,.07)">35 weeks</span>
+        <span class="pill" style="--c-border:rgba(40,205,65,.25);--c-text:var(--green);--c-bg:rgba(40,205,65,.08)">Phase 1 active</span>
+      </div>
+      <div class="card-ft"><span class="card-tag">May 2026 – Feb 2027</span><span class="card-arr">↗</span></div>
+    </a>
+    <a href="https://gatenote.vercel.app/" target="_blank" class="card" style="--c:var(--green);--cg:rgba(40,205,65,.07)">
+      <div class="card-accent" style="--c:var(--green)"></div>
+      <div class="card-icon">📚</div>
+      <h3>GATE CSE Notes Hub</h3>
+      <p>Free notes, PDFs, playlists, and PYQs for every GATE CSE subject — curated from top educators in one place.</p>
+      <div class="card-pills">
+        <span class="pill" style="--c-border:rgba(40,205,65,.25);--c-text:var(--green);--c-bg:rgba(40,205,65,.08)">All subjects</span>
+        <span class="pill" style="--c-border:rgba(40,205,65,.25);--c-text:var(--green);--c-bg:rgba(40,205,65,.08)">Free PDFs</span>
+      </div>
+      <div class="card-ft"><span class="card-tag">Subject-wise resources</span><span class="card-arr" style="color:var(--green)">↗</span></div>
+    </a>
+    <a href="https://dsatamz.vercel.app/" target="_blank" class="card" style="--c:var(--orange);--cg:rgba(255,149,0,.07)">
+      <div class="card-accent" style="--c:var(--orange)"></div>
+      <div class="card-icon">💻</div>
+      <h3>DSA Question Bank</h3>
+      <p>Week-by-week curated problems from LeetCode, GFG, and Codeforces. Arrays to LC Hard. Includes cheat sheet PDF.</p>
+      <div class="card-pills">
+        <span class="pill" style="--c-border:rgba(255,149,0,.25);--c-text:var(--orange);--c-bg:rgba(255,149,0,.07)">260+ problems</span>
+        <span class="pill" style="--c-border:rgba(255,149,0,.25);--c-text:var(--orange);--c-bg:rgba(255,149,0,.07)">LC · GFG · CF</span>
+      </div>
+      <div class="card-ft"><span class="card-tag">Easy → Hard · W1–W35</span><span class="card-arr" style="color:var(--orange)">↗</span></div>
+    </a>
+    <a href="https://gatecsehub.vercel.app/" target="_blank" class="card" style="--c:var(--purple);--cg:rgba(175,82,222,.07)">
+      <div class="card-accent" style="--c:var(--purple)"></div>
+      <div class="card-icon">📦</div>
+      <h3>GATE CSE Hub</h3>
+      <p>Comprehensive resource collection — downloadable PDFs and subject material for all 16 GATE subjects, completely free.</p>
+      <div class="card-pills">
+        <span class="pill" style="--c-border:rgba(175,82,222,.25);--c-text:var(--purple);--c-bg:rgba(175,82,222,.07)">PDF downloads</span>
+        <span class="pill" style="--c-border:rgba(175,82,222,.25);--c-text:var(--purple);--c-bg:rgba(175,82,222,.07)">Free</span>
+      </div>
+      <div class="card-ft"><span class="card-tag">All 16 subjects</span><span class="card-arr" style="color:var(--purple)">↗</span></div>
+    </a>
+    <a href="https://gatetamzresources.vercel.app/" target="_blank" class="card" style="--c:var(--red);--cg:rgba(255,59,48,.07)">
+      <div class="card-accent" style="--c:var(--red)"></div>
+      <div class="card-icon">🔗</div>
+      <h3>Resource Links</h3>
+      <p>Handpicked external resources — Abdul Bari, Striver, GO Classes, Gate Smashers, GATE Overflow, Neso Academy.</p>
+      <div class="card-pills">
+        <span class="pill" style="--c-border:rgba(255,59,48,.25);--c-text:var(--red);--c-bg:rgba(255,59,48,.07)">Curated links</span>
+      </div>
+      <div class="card-ft"><span class="card-tag">External resources</span><span class="card-arr" style="color:var(--red)">↗</span></div>
+    </a>
+  </div>
+</section>
+
+<div class="div"></div>
+
+<!-- PYQ + AI -->
+<section id="pyq">
+  <div class="sec-head">
+    <div class="sec-tag">Intelligence</div>
+    <h2 class="sec-h">Master GATE through <em>PYQs</em></h2>
+    <p class="sec-d">Four tools built around one insight: previous year questions are the syllabus. Search, practice, analyse, simulate.</p>
+  </div>
+  <div class="grid-2">
+    <a href="https://tahagateai.vercel.app/" target="_blank" class="card" style="--c:var(--red);--cg:rgba(255,59,48,.07)">
+      <div class="card-accent" style="--c:var(--red)"></div>
+      <div class="card-icon" style="background:rgba(255,59,48,.07)">✦</div>
+      <h3>GATE Intelligence — AI Tutor</h3>
+      <p>BM25 + semantic hybrid search across 1,492 PYQs. Ask anything and get answers grounded in real GATE questions. Subject-wise or mixed practice. Mock tests, timer, result analysis, weak area detection. 100% free.</p>
+      <div class="card-pills">
+        <span class="pill" style="--c-border:rgba(255,59,48,.25);--c-text:var(--red);--c-bg:rgba(255,59,48,.07)">1,492 PYQs</span>
+        <span class="pill" style="--c-border:rgba(255,59,48,.25);--c-text:var(--red);--c-bg:rgba(255,59,48,.07)">AI explanations</span>
+        <span class="pill" style="--c-border:rgba(255,59,48,.25);--c-text:var(--red);--c-bg:rgba(255,59,48,.07)">Free</span>
+      </div>
+      <div class="card-ft"><span class="card-tag">1996–2025 · 16 subjects</span><span class="card-arr" style="color:var(--red)">↗</span></div>
+    </a>
+    <a href="https://gateecotaha.vercel.app/" target="_blank" class="card" style="--c:var(--teal);--cg:rgba(50,173,230,.07)">
+      <div class="card-accent" style="--c:var(--teal)"></div>
+      <div class="card-icon" style="background:rgba(50,173,230,.07)">⌖</div>
+      <h3>GATE Intelligence — CSE Bank</h3>
+      <p>Five-pillar prep system: Discover · Learn · Practice · Analyze · Collections. 1,484 PYQs, flashcards, spaced repetition, trend heatmaps, bookmarks. No account needed.</p>
+      <div class="card-pills">
+        <span class="pill" style="--c-border:rgba(50,173,230,.25);--c-text:var(--teal);--c-bg:rgba(50,173,230,.07)">1,484 PYQs</span>
+        <span class="pill" style="--c-border:rgba(50,173,230,.25);--c-text:var(--teal);--c-bg:rgba(50,173,230,.07)">26 years</span>
+        <span class="pill" style="--c-border:rgba(50,173,230,.25);--c-text:var(--teal);--c-bg:rgba(50,173,230,.07)">Flashcards</span>
+      </div>
+      <div class="card-ft"><span class="card-tag">2000–2025 · 16 subjects</span><span class="card-arr" style="color:var(--teal)">↗</span></div>
+    </a>
+    <a href="https://gatepvq.vercel.app/" target="_blank" class="card" style="--c:var(--green);--cg:rgba(40,205,65,.07)">
+      <div class="card-accent" style="--c:var(--green)"></div>
+      <div class="card-icon" style="background:rgba(40,205,65,.07)">📋</div>
+      <h3>PYQ Question Bank</h3>
+      <p>Select any of 21 GATE CSE subjects and practice topic-wise previous year questions. Filter by subject, browse by year. Direct practice for GATE 2027.</p>
+      <div class="card-pills">
+        <span class="pill" style="--c-border:rgba(40,205,65,.25);--c-text:var(--green);--c-bg:rgba(40,205,65,.08)">21 subjects</span>
+        <span class="pill" style="--c-border:rgba(40,205,65,.25);--c-text:var(--green);--c-bg:rgba(40,205,65,.08)">Topic-wise</span>
+      </div>
+      <div class="card-ft"><span class="card-tag">Topic-wise practice</span><span class="card-arr" style="color:var(--green)">↗</span></div>
+    </a>
+    <a href="https://tahagatetrend.vercel.app/" target="_blank" class="card" style="--c:var(--purple);--cg:rgba(175,82,222,.07)">
+      <div class="card-accent" style="--c:var(--purple)"></div>
+      <div class="card-icon" style="background:rgba(175,82,222,.07)">📈</div>
+      <h3>GATE CSE Trend Analysis</h3>
+      <p>Deep analysis of 1,492 PYQs across 16 subjects, 2010–2025. Heatmap, difficulty split, NAT growth to 34%, rising topic predictions. Graph Theory and SQL tied at #1.</p>
+      <div class="card-pills">
+        <span class="pill" style="--c-border:rgba(175,82,222,.25);--c-text:var(--purple);--c-bg:rgba(175,82,222,.07)">41 topics</span>
+        <span class="pill" style="--c-border:rgba(175,82,222,.25);--c-text:var(--purple);--c-bg:rgba(175,82,222,.07)">2010–2025</span>
+      </div>
+      <div class="card-ft"><span class="card-tag">Rising: Graph Theory · SQL</span><span class="card-arr" style="color:var(--purple)">↗</span></div>
+    </a>
+  </div>
+</section>
+
+<div class="div"></div>
+
+<!-- CBT -->
+<section id="exam">
+  <div class="sec-head">
+    <div class="sec-tag">Exam Simulation</div>
+    <h2 class="sec-h">Practice under <em>pressure</em></h2>
+    <p class="sec-d">Two CBT simulators — one full 65-question paper, one subject-specific. Build exam temperament before the real thing.</p>
+  </div>
+  <div class="grid-2">
+    <a href="https://tahagatecbt.vercel.app/" target="_blank" class="card" style="--c:#636366;--cg:rgba(99,99,102,.07)">
+      <div class="card-accent" style="--c:#636366"></div>
+      <div class="card-icon" style="background:rgba(99,99,102,.07)">🖥️</div>
+      <h3>GATE CBT Simulator</h3>
+      <p>Full Computer Based Test — GATE-style interface, 65 questions, 180-minute timer, question navigation panel, review mode. Target: 15+ full mocks before GATE 2027. Desktop recommended.</p>
+      <div class="card-pills">
+        <span class="pill">65 questions</span>
+        <span class="pill">180 min</span>
+        <span class="pill">Desktop</span>
+      </div>
+      <div class="card-ft"><span class="card-tag">Full paper simulation</span><span class="card-arr" style="color:#636366">↗</span></div>
+    </a>
+    <a href="https://tahagatesubjectcbt.vercel.app/" target="_blank" class="card" style="--c:var(--teal);--cg:rgba(50,173,230,.07)">
+      <div class="card-accent" style="--c:var(--teal)"></div>
+      <div class="card-icon" style="background:rgba(50,173,230,.07)">📝</div>
+      <h3>Subject CBT Simulator</h3>
+      <p>Subject-specific CBT practice in the same GATE interface. Drill one subject at a time — ideal for end-of-phase confirmation. Confirms readiness before moving to the next subject block.</p>
+      <div class="card-pills">
+        <span class="pill" style="--c-border:rgba(50,173,230,.25);--c-text:var(--teal);--c-bg:rgba(50,173,230,.07)">Subject-wise</span>
+        <span class="pill" style="--c-border:rgba(50,173,230,.25);--c-text:var(--teal);--c-bg:rgba(50,173,230,.07)">GATE interface</span>
+      </div>
+      <div class="card-ft"><span class="card-tag">Per-subject practice</span><span class="card-arr" style="color:var(--teal)">↗</span></div>
+    </a>
+  </div>
+</section>
+
+<div class="div"></div>
+
+<!-- PHASES -->
+<section id="roadmap">
+  <div class="sec-head">
+    <div class="sec-tag">Timeline</div>
+    <h2 class="sec-h">The 5-phase <em>plan</em></h2>
+    <p class="sec-d">OS → DBMS → CN front-loaded for placements, then GATE-only subjects. DSA runs parallel every single day.</p>
+  </div>
+  <div class="phases">
+    <a href="https://gatetamz.vercel.app/" target="_blank" class="phase" style="--ph:#0071e3;--ph-bg:rgba(0,113,227,.07);--ph-border:rgba(0,113,227,.18)">
+      <div class="ph-n">1</div>
+      <div class="ph-body">
+        <div class="ph-info">
+          <div class="ph-name">OS + Arrays, Two Pointers, Sliding Window, Stack, Binary Search, Linked Lists, Trees</div>
+          <div class="ph-range">May – July 2026 · W1–W8 · 80 LC target</div>
+        </div>
+        <div class="ph-tags">
+          <span class="ph-tag">OS</span>
+          <span class="ph-tag">DSA Fundamentals</span>
+          <span class="ph-tag" style="background:rgba(40,205,65,.1);border-color:rgba(40,205,65,.25);color:var(--green)">Active — W5</span>
+        </div>
+        <div class="ph-prog">
+          <span class="ph-pct">W5 / W8</span>
+          <div class="ph-bar-w"><div class="ph-bar" data-w="62" style="background:#0071e3"></div></div>
+        </div>
+      </div>
+      <span class="ph-arr">›</span>
+    </a>
+    <a href="https://gatetamz.vercel.app/" target="_blank" class="phase" style="--ph:var(--green);--ph-bg:rgba(40,205,65,.07);--ph-border:rgba(40,205,65,.2)">
+      <div class="ph-n">2</div>
+      <div class="ph-body">
+        <div class="ph-info">
+          <div class="ph-name">DBMS + Heaps, Greedy, 1D/2D DP, Advanced DP, Graphs BFS/DFS, Shortest Path, Tries</div>
+          <div class="ph-range">July – August 2026 · W9–W16 · 152 LC target</div>
+        </div>
+        <div class="ph-tags"><span class="ph-tag">DBMS</span><span class="ph-tag">DP + Graphs</span></div>
+        <div class="ph-prog"><span class="ph-pct">Queued</span><div class="ph-bar-w"><div class="ph-bar" data-w="0"></div></div></div>
+      </div>
+      <span class="ph-arr">›</span>
+    </a>
+    <a href="https://gatetamz.vercel.app/" target="_blank" class="phase" style="--ph:var(--purple);--ph-bg:rgba(175,82,222,.07);--ph-border:rgba(175,82,222,.2)">
+      <div class="ph-n">3</div>
+      <div class="ph-body">
+        <div class="ph-info">
+          <div class="ph-name">Computer Networks + DP on Trees, Bit Manipulation, Advanced Graphs, Mock OA Rounds</div>
+          <div class="ph-range">Sep – Oct 2026 · W17–W24 · 210 LC target</div>
+        </div>
+        <div class="ph-tags"><span class="ph-tag">CN</span><span class="ph-tag">Mock OAs</span></div>
+        <div class="ph-prog"><span class="ph-pct">Queued</span><div class="ph-bar-w"><div class="ph-bar" data-w="0"></div></div></div>
+      </div>
+      <span class="ph-arr">›</span>
+    </a>
+    <a href="https://gatetamz.vercel.app/" target="_blank" class="phase" style="--ph:var(--orange);--ph-bg:rgba(255,149,0,.07);--ph-border:rgba(255,149,0,.2)">
+      <div class="ph-n">4</div>
+      <div class="ph-body">
+        <div class="ph-info">
+          <div class="ph-name">Discrete Math, TOC, Compiler, COA + LC Hard focus, Contests, Mock Interviews</div>
+          <div class="ph-range">Oct – Dec 2026 · W25–W32 · 253 LC target</div>
+        </div>
+        <div class="ph-tags"><span class="ph-tag">TOC</span><span class="ph-tag">Compiler</span><span class="ph-tag">COA</span><span class="ph-tag">LC Hard</span></div>
+        <div class="ph-prog"><span class="ph-pct">Queued</span><div class="ph-bar-w"><div class="ph-bar" data-w="0"></div></div></div>
+      </div>
+      <span class="ph-arr">›</span>
+    </a>
+    <a href="https://gatetamz.vercel.app/" target="_blank" class="phase" style="--ph:var(--red);--ph-bg:rgba(255,59,48,.07);--ph-border:rgba(255,59,48,.2)">
+      <div class="ph-n">5</div>
+      <div class="ph-body">
+        <div class="ph-info">
+          <div class="ph-name">Final Sprint — PYQ marathon, 2 full mocks/week, placement interviews, formula revision</div>
+          <div class="ph-range">Dec 2026 – Feb 2027 · W33–W35+ · 15+ full mocks</div>
+        </div>
+        <div class="ph-tags"><span class="ph-tag">Final Revision</span><span class="ph-tag">Mock OA ×2/week</span></div>
+        <div class="ph-prog"><span class="ph-pct">Final</span><div class="ph-bar-w"><div class="ph-bar" data-w="0"></div></div></div>
+      </div>
+      <span class="ph-arr">›</span>
+    </a>
+  </div>
+</section>
+
+<div class="div"></div>
+
+<!-- SUBJECTS -->
+<section>
+  <div class="sec-head">
+    <div class="sec-tag">Syllabus</div>
+    <h2 class="sec-h">16 GATE CSE <em>subjects</em></h2>
+    <p class="sec-d">No subject scored zero in any year from 2014–2025. Breadth is the strategy.</p>
+  </div>
+  <div class="subj-grid">
+    <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--teal)"></div><span class="subj-name">Data Structures</span><span class="subj-tag">Core</span></a>
+    <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--teal)"></div><span class="subj-name">Algorithms</span><span class="subj-tag">Core</span></a>
+    <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item" style="border-color:rgba(0,113,227,.22);background:var(--accent-dim)"><div class="subj-dot" style="background:#0071e3"></div><span class="subj-name" style="color:var(--accent)">Operating Systems</span><span class="subj-tag" style="color:var(--accent);font-weight:600">Phase 1 ●</span></a>
+    <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--green)"></div><span class="subj-name">DBMS</span><span class="subj-tag">Phase 2</span></a>
+    <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--purple)"></div><span class="subj-name">Computer Networks</span><span class="subj-tag">Phase 3</span></a>
+    <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--orange)"></div><span class="subj-name">Theory of Computation</span><span class="subj-tag">Phase 4</span></a>
+    <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--orange)"></div><span class="subj-name">Compiler Design</span><span class="subj-tag">Phase 4</span></a>
+    <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--orange)"></div><span class="subj-name">Computer Organization</span><span class="subj-tag">Phase 4</span></a>
+    <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--orange)"></div><span class="subj-name">Digital Logic</span><span class="subj-tag">Phase 4</span></a>
+    <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--ink3)"></div><span class="subj-name">Discrete Mathematics</span><span class="subj-tag">Foundation</span></a>
+    <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--ink3)"></div><span class="subj-name">Linear Algebra</span><span class="subj-tag">Foundation</span></a>
+    <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--ink3)"></div><span class="subj-name">Probability &amp; Statistics</span><span class="subj-tag">Foundation</span></a>
+    <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--ink3)"></div><span class="subj-name">Calculus</span><span class="subj-tag">Foundation</span></a>
+    <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--teal)"></div><span class="subj-name">C Programming</span><span class="subj-tag">Core</span></a>
+    <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--ink3)"></div><span class="subj-name">General Aptitude</span><span class="subj-tag">Aptitude</span></a>
+    <a href="https://gatenote.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--ink3)"></div><span class="subj-name">Engineering Maths</span><span class="subj-tag">Foundation</span></a>
+  </div>
+</section>
+
+<div class="div"></div>
+
+<!-- DSA -->
+<section>
+  <div class="sec-head">
+    <div class="sec-tag">DSA Track</div>
+    <h2 class="sec-h">Week-by-week <em>problem bank</em></h2>
+    <p class="sec-d">260+ problems across 35 weeks. LeetCode, GFG, Codeforces — filtered by week, phase, and difficulty.</p>
+  </div>
+  <div class="dsa-grid">
+    <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--teal)"></div><span class="subj-name">W1 — Arrays + Hashing</span><span class="subj-tag">12 problems</span></a>
+    <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--teal)"></div><span class="subj-name">W2 — Two Pointers</span><span class="subj-tag">12 problems</span></a>
+    <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--teal)"></div><span class="subj-name">W3 — Sliding Window</span><span class="subj-tag">10 problems</span></a>
+    <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--teal)"></div><span class="subj-name">W4 — Stack &amp; Monotonic Stack</span><span class="subj-tag">9 problems</span></a>
+    <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item" style="border-color:rgba(0,113,227,.22);background:var(--accent-dim)"><div class="subj-dot" style="background:var(--accent)"></div><span class="subj-name" style="color:var(--accent)">W5 — Binary Search</span><span class="subj-tag" style="color:var(--accent);font-weight:600">Active ●</span></a>
+    <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--teal)"></div><span class="subj-name">W6 — Linked Lists</span><span class="subj-tag">9 problems</span></a>
+    <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--teal)"></div><span class="subj-name">W7 — Trees &amp; BST</span><span class="subj-tag">11 problems</span></a>
+    <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--teal)"></div><span class="subj-name">W8 — Tries &amp; Hash Maps</span><span class="subj-tag">9 problems</span></a>
+    <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--green)"></div><span class="subj-name">W9 — Heaps &amp; Priority Queue</span><span class="subj-tag">9 problems</span></a>
+    <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--green)"></div><span class="subj-name">W10 — Greedy Algorithms</span><span class="subj-tag">~8 problems</span></a>
+    <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--green)"></div><span class="subj-name">W11 — DP 1D Patterns</span><span class="subj-tag">10 problems</span></a>
+    <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--green)"></div><span class="subj-name">W12 — DP 2D + LCS, LIS</span><span class="subj-tag">10 problems</span></a>
+    <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--green)"></div><span class="subj-name">W14 — Graphs BFS/DFS/Topo</span><span class="subj-tag">10 problems</span></a>
+    <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--purple)"></div><span class="subj-name">W17 — DP on Trees</span><span class="subj-tag">Phase 3</span></a>
+    <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item"><div class="subj-dot" style="background:var(--purple)"></div><span class="subj-name">W19 — Advanced Graphs + MST</span><span class="subj-tag">Phase 3</span></a>
+    <a href="https://dsatamz.vercel.app/" target="_blank" class="subj-item" style="border-color:rgba(0,113,227,.22);background:var(--accent-dim)"><div class="subj-dot" style="background:var(--accent)"></div><span class="subj-name" style="color:var(--accent);font-weight:600">View all 260+ problems →</span><span class="subj-tag">W1–W35</span></a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="ft-inner">
+    <div>
+      <div class="ft-col-h">Study</div>
+      <a href="https://gatetamz.vercel.app/" target="_blank" class="ft-link">Roadmap</a>
+      <a href="https://gatenote.vercel.app/" target="_blank" class="ft-link">Notes Hub</a>
+      <a href="https://dsatamz.vercel.app/" target="_blank" class="ft-link">DSA Bank</a>
+      <a href="https://gatecsehub.vercel.app/" target="_blank" class="ft-link">CSE Hub</a>
+      <a href="https://gatetamzresources.vercel.app/" target="_blank" class="ft-link">Resources</a>
+    </div>
+    <div>
+      <div class="ft-col-h">Intelligence</div>
+      <a href="https://gatepvq.vercel.app/" target="_blank" class="ft-link">PYQ Bank</a>
+      <a href="https://gateecotaha.vercel.app/" target="_blank" class="ft-link">CSE Bank</a>
+      <a href="https://tahagateai.vercel.app/" target="_blank" class="ft-link">AI Tutor</a>
+      <a href="https://tahagatetrend.vercel.app/" target="_blank" class="ft-link">Trend Analysis</a>
+    </div>
+    <div>
+      <div class="ft-col-h">Exam</div>
+      <a href="https://tahagatecbt.vercel.app/" target="_blank" class="ft-link">CBT Simulator</a>
+      <a href="https://tahagatesubjectcbt.vercel.app/" target="_blank" class="ft-link">Subject CBT</a>
+    </div>
+  </div>
+  <div class="ft-note">TAMZ — GATE CSE 2027 · Target IISc MTech CSE · Built May 2026</div>
+</footer>
+
+</div><!-- /wrap -->
+
+<script>
+// ── COUNTDOWN ──────────────────────────────
+function updateCountdown(){
+  var target=new Date('2027-02-07T09:00:00');
+  var now=new Date();
+  var diff=Math.max(0,target-now);
+  var days=Math.floor(diff/864e5);
+  var hrs=Math.floor((diff%864e5)/36e5);
+  var mins=Math.floor((diff%36e5)/6e4);
+  var secs=Math.floor((diff%6e4)/1e3);
+  document.getElementById('cdD').textContent=days;
+  document.getElementById('cdH').textContent=String(hrs).padStart(2,'0');
+  document.getElementById('cdM').textContent=String(mins).padStart(2,'0');
+  document.getElementById('cdS').textContent=String(secs).padStart(2,'0');
+  document.getElementById('navDays').textContent=days;
+}
+updateCountdown();setInterval(updateCountdown,1000);
+
+// ── PHASE BARS ─────────────────────────────
+window.addEventListener('load',function(){
+  document.querySelectorAll('.ph-bar[data-w]').forEach(function(b){
+    setTimeout(function(){b.style.width=b.getAttribute('data-w')+'%';},400);
+  });
+});
+
+// ── SCROLL REVEAL ──────────────────────────
+(function(){
+  if(!('IntersectionObserver' in window)) return;
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        e.target.style.opacity='1';
+        e.target.style.transform='translateY(0)';
+        io.unobserve(e.target);
+      }
+    });
+  },{threshold:.08});
+  document.querySelectorAll('.card,.phase,.subj-item').forEach(function(el,i){
+    el.style.opacity='0';
+    el.style.transform='translateY(16px)';
+    el.style.transition='opacity .4s ease '+(i*0.04)+'s, transform .4s ease '+(i*0.04)+'s';
+    io.observe(el);
+  });
+})();
+</script>
+
+<!-- ╔══════════════════════════════════════════════════╗ -->
+<!-- ║   TAMZ THEME SWITCHER — apple theme             ║ -->
+<!-- ╚══════════════════════════════════════════════════╝ -->
+<style>
+#tamz-sw{position:fixed;bottom:22px;right:22px;z-index:9000;display:flex;flex-direction:column;align-items:flex-end;gap:6px;font-family:-apple-system,'SF Pro Display','Inter',sans-serif}
+#tamz-sw-menu{
+  display:none;flex-direction:column;gap:3px;
+  background:var(--surface);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);
+  backdrop-filter:saturate(180%) blur(20px);
+  border:1px solid var(--border2);
+  padding:8px;min-width:200px;
+  border-radius:14px;
+  box-shadow:var(--shadow-lg);
+}
+#tamz-sw-menu.open{display:flex}
+#tamz-sw-btn{
+  width:40px;height:40px;
+  background:var(--surface);
+  -webkit-backdrop-filter:blur(20px);
+  backdrop-filter:blur(20px);
+  border:1px solid var(--border2);
+  color:var(--ink2);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;
+  border-radius:50%;
+  box-shadow:var(--shadow-md);
+  transition:all .15s;
+}
+#tamz-sw-btn:hover{border-color:var(--accent);color:var(--accent)}
+.tsw-lbl{font-size:10px;font-weight:600;color:var(--ink3);letter-spacing:.04em;text-transform:uppercase;padding:4px 8px 2px}
+.tsw-b{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 10px;border:none;background:transparent;
+  color:var(--ink2);font-family:inherit;font-size:13px;font-weight:400;
+  cursor:pointer;transition:background .12s,color .12s;
+  text-align:left;text-decoration:none;width:100%;
+  border-radius:8px;letter-spacing:-.01em;
+}
+.tsw-b:hover{background:var(--accent-dim);color:var(--ink)}
+.tsw-b.active{color:var(--accent);font-weight:500;background:var(--accent-dim);cursor:default}
+.tsw-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.tsw-sep{height:1px;background:var(--border);margin:4px 0}
+</style>
+<div id="tamz-sw">
+  <div id="tamz-sw-menu" role="menu" aria-label="Switch TAMZ theme">
+    <div class="tsw-lbl">Theme</div>
+    <button class="tsw-b active" disabled aria-current="true">
+      <span class="tsw-dot" style="background:var(--accent)"></span>Apple Mode
+    </button>
+    <button class="tsw-b" onclick="tswGo('hacker')" role="menuitem">
+      <span class="tsw-dot" style="background:#00ff41"></span>Terminal Mode
+    </button>
+    <button class="tsw-b" onclick="tswGo('executive')" role="menuitem">
+      <span class="tsw-dot" style="background:#c8954a"></span>Executive Mode
+    </button>
+    <button class="tsw-b" onclick="tswGo('netflix')" role="menuitem">
+      <span class="tsw-dot" style="background:#E50914"></span>Cinematic Mode
+    </button>
+    <button class="tsw-b" onclick="tswGo('cyberpunk')" role="menuitem">
+      <span class="tsw-dot" style="background:#ff00aa"></span>Night City Mode
+    </button>
+    <div class="tsw-sep"></div>
+    <a class="tsw-b" href="index.html?choose" role="menuitem">
+      ← Choose again
+    </a>
+  </div>
+  <button id="tamz-sw-btn" onclick="tswToggle()" title="Switch theme  Alt+T" aria-label="Open theme switcher">⊞</button>
+</div>
+<script>
+(function(){
+  function tswToggle(){document.getElementById('tamz-sw-menu').classList.toggle('open')}
+  function tswGo(theme){
+    localStorage.setItem('tamz-theme',theme);
+    var m={hacker:'hacker.html',executive:'executive.html',netflix:'netflix_redesign.html',cyberpunk:'cyberpunk.html'};
+    window.location.replace(m[theme]||'index.html');
+  }
+  window.tswToggle=tswToggle;window.tswGo=tswGo;
+  document.addEventListener('keydown',function(e){if(e.altKey&&e.key.toLowerCase()==='t'){e.preventDefault();tswToggle();}});
+  document.addEventListener('click',function(e){if(!e.target.closest('#tamz-sw')){document.getElementById('tamz-sw-menu').classList.remove('open');}});
+})();
+</script>
+
+</body>
+</html>
